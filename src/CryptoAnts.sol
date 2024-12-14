@@ -8,7 +8,7 @@ interface IEgg is IERC20 {
 }
 
 interface ICryptoAnts is IERC721 {
-  event EggsBought(address, uint256);
+  event EggsBought(address indexed _buyer, uint256 _amount);
 
   function buyEggs(uint256) external payable;
 
