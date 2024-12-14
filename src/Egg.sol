@@ -9,7 +9,7 @@ interface IEgg is IERC20 {
 pragma solidity >=0.8.4 <0.9.0;
 
 contract Egg is ERC20, IEgg {
-  address private _ants;
+  address private immutable _ants;
 
   constructor(address __ants) ERC20('EGG', 'EGG') {
     _ants = __ants;
