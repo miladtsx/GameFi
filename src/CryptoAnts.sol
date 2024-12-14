@@ -10,8 +10,6 @@ interface IEgg is IERC20 {
 interface ICryptoAnts is IERC721 {
   event EggsBought(address, uint256);
 
-  function notLocked() external view returns (bool);
-
   function buyEggs(uint256) external payable;
 
   error NoEggs();
@@ -35,7 +33,6 @@ contract CryptoAnts is ERC721, ICryptoAnts {
   IEgg public immutable eggs;
   uint256 public eggPrice = 0.01 ether;
   uint256[] public allAntsIds;
-  bool public override notLocked = false;
   uint256 public antsCreated = 0;
 
   constructor(address _eggs) ERC721('Crypto Ants', 'ANTS') {
@@ -83,6 +80,6 @@ contract CryptoAnts is ERC721, ICryptoAnts {
     require(locked == false, 'Sorry, you are not allowed to re-enter here :)');
     locked = true;
     _;
-    locked = notLocked;
+    locked = false;
   }
 }
