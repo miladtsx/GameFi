@@ -17,7 +17,7 @@ contract Egg is ERC20, IEgg {
 
   function mint(address _to, uint256 _amount) external override {
     //solhint-disable-next-line
-    require(msg.sender == _ants, 'Only the ants contract can call this function, please refer to the ants contract');
+    require(msg.sender == _ants, 'Only CryptoAnts can mint eggs');
     _mint(_to, _amount);
   }
 
