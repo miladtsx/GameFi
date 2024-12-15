@@ -66,6 +66,27 @@ contract UnitTest is Test, TestUtils {
     vm.stopPrank();
   }
 
+  function testBuyEggsValidateInput() public {
+    address __randomAddress = makeAddr('randomAddress');
+    uint8 __invalidAmountOfEggsToBuy = 0;
+    hoax(__randomAddress, 1 ether);
+    vm.expectRevert('Amount must be greater than zero');
+    _cryptoAnts.buyEggs{value: 1 ether}(__invalidAmountOfEggsToBuy);
+  }
+
+  function testBuyEggsReturnExtraETHToBuyer() public {
+    address __superRichBuyerAddress = makeAddr('superRichBuyerAddress');
+    uint8 __amountOfEggsToBuy = 10; // 0.1 ETH
+    uint256 __expectedReturnValue = 0.9 ether;
+    deal(__superRichBuyerAddress, 1 ether);
+    vm.startPrank(__superRichBuyerAddress);
+
+    _cryptoAnts.buyEggs{value: 1 ether}(__amountOfEggsToBuy);
+    vm.stopPrank();
+
+    assertEq(__superRichBuyerAddress.balance, __expectedReturnValue);
+  }
+
   function testBuyEggsValidateEggSupply() public {
     address __randomBuyerAccount = makeAddr('__randomBuyerAccount');
     uint8 __amountOfExpectedEggsToBuy = 100;

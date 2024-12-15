@@ -40,13 +40,22 @@ contract CryptoAnts is ERC721, ICryptoAnts {
   }
 
   function buyEggs(uint256 _amount) external payable override lock {
-    uint256 _eggPrice = eggPrice;
-    uint256 eggsCallerCanBuy = (msg.value / _eggPrice);
+    require(_amount > 0, 'Amount must be greater than zero');
 
-    if (_amount > eggsCallerCanBuy) revert WrongEtherSent();
+    uint256 totalCost = _amount * eggPrice;
+
+    if (msg.value < totalCost) revert WrongEtherSent();
 
     eggs.mint(msg.sender, _amount);
-    emit EggsBought(msg.sender, eggsCallerCanBuy);
+
+    uint256 extraETH = msg.value - totalCost;
+
+    if (extraETH > 0) {
+      (bool success,) = msg.sender.call{value: extraETH}('');
+      require(success, 'Failed to return extra ETH');
+    }
+
+    emit EggsBought(msg.sender, _amount);
   }
 
   function createAnt() external {
