@@ -86,8 +86,48 @@ contract IntegrationTest is Test, TestUtils {
     assertEq(_eggs.balanceOf(_randomAddress), 1);
   }
 
-  function testAnts_should_be_able_to_create_lay_eggs_once_every_10_minutes() public {}
-  function testAnts_should_create_random_eggs_ranging_0_to_20() public {}
+  function testAntsShouldBeAbleToCreateLayEggsOnceEvery10Minutes() public {
+    vm.startPrank(_randomAddress);
+
+    deal(_randomAddress, 1 ether);
+    _cryptoAnts.buyEggs{value: 1 ether}(1);
+
+    _cryptoAnts.createAnt();
+
+    assertEq(_eggs.balanceOf(_randomAddress), 0);
+
+    uint8 _firstAntId = 1;
+    _cryptoAnts.layEgg(_firstAntId);
+
+    vm.warp(block.timestamp + 9 minutes);
+
+    vm.expectRevert('You must wait before laying another egg');
+    _cryptoAnts.layEgg(_firstAntId);
+
+    vm.warp(block.timestamp + 1 minutes);
+    _cryptoAnts.layEgg(_firstAntId);
+
+    vm.stopPrank();
+  }
+
+  function testAntsShouldCreateRandomEggsRanging0To20() public {
+    vm.startPrank(_randomAddress);
+
+    deal(_randomAddress, 1 ether);
+    _cryptoAnts.buyEggs{value: 1 ether}(1);
+
+    _cryptoAnts.createAnt();
+
+    assertEq(_eggs.balanceOf(_randomAddress), 0);
+
+    uint8 _firstAntId = 1;
+    _cryptoAnts.layEgg(_firstAntId);
+
+    uint8 _layedEggs = uint8(_eggs.balanceOf(_randomAddress));
+    require(_layedEggs >= 0 && _layedEggs <= 20, 'Number of laid eggs must be between 0 and 20');
+    vm.stopPrank();
+  }
+
   function testAnts_should_die_randomly_when_laying_eggs() public {}
 
   /*

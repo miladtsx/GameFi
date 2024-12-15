@@ -239,9 +239,8 @@ contract UnitTest is Test, TestUtils {
     _cryptoAnts.createAnt();
 
     uint8 _firstAntId = 1;
-    uint8 _expectedCountOfEggsLayed = 1;
-    vm.expectEmit(true, false, false, true);
-    emit ICryptoAnts.EggsLayed(_randomAddress, _expectedCountOfEggsLayed);
+    vm.expectEmit(true, false, false, false);
+    emit ICryptoAnts.EggsLayed(_randomAddress, 0);
     _cryptoAnts.layEgg(_firstAntId);
     vm.stopPrank();
   }

@@ -63,8 +63,11 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts {
 
     lastEggLayingTime[_antId] = block.timestamp;
 
-    EGGS.mint(msg.sender, 1);
-    emit EggsLayed(msg.sender, 1);
+    // Generate a random number of eggs to mint (0 to 20)
+    uint256 numberOfEggs = uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender))) % 21;
+
+    EGGS.mint(msg.sender, numberOfEggs);
+    emit EggsLayed(msg.sender, numberOfEggs);
   }
 
   function sellAnt(uint256 _antId) external {
