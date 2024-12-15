@@ -7,7 +7,7 @@ import {CryptoAnts, ICryptoAnts} from 'src/CryptoAnts.sol';
 import {Egg, IEgg} from 'src/Egg.sol';
 import {TestUtils} from 'test/TestUtils.sol';
 
-contract E2ECryptoAnts is Test, TestUtils {
+contract UnitTest is Test, TestUtils {
   uint256 internal constant FORK_BLOCK = 7_117_514;
   ICryptoAnts internal _cryptoAnts;
   address internal _owner = makeAddr('owner');
@@ -20,7 +20,7 @@ contract E2ECryptoAnts is Test, TestUtils {
     _eggs = new Egg(address(_cryptoAnts));
   }
 
-  function test__BuyEggs_Only_CryptoAnt_Can_Mint_Egg() public {
+  function testOnlyCryptoAntCanMintEgg() public {
     address __nonCryptoAntsAddress = makeAddr('nonCryptoAnts');
     vm.startPrank(__nonCryptoAntsAddress);
 
@@ -38,7 +38,7 @@ contract E2ECryptoAnts is Test, TestUtils {
     assertEq(__balanceOfBuyer, __amountOfEggsToBought);
   }
 
-  function test__BuyEggs_Should_Emit_Events() public {
+  function testBuyEggsEmitEvents() public {
     address __randomBuyerAddress = makeAddr('randomBuyerAddress');
 
     vm.startPrank(__randomBuyerAddress);
@@ -55,7 +55,7 @@ contract E2ECryptoAnts is Test, TestUtils {
     vm.stopPrank();
   }
 
-  function test__BuyEggs_Validate_Buyer_Balance() public {
+  function testBuyEggsValidatesBuyerBalance() public {
     address lowBalanceAccount = makeAddr('lowBalanceAccount');
     uint8 __amountOfEggsToBuy = 100;
     deal(lowBalanceAccount, 0.9 ether); // not enough to buy 100 Egg.
@@ -66,7 +66,7 @@ contract E2ECryptoAnts is Test, TestUtils {
     vm.stopPrank();
   }
 
-  function test__BuyEggs_Validate_Egg_Supply() public {
+  function testBuyEggsValidateEggSupply() public {
     address __randomBuyerAccount = makeAddr('__randomBuyerAccount');
     uint8 __amountOfExpectedEggsToBuy = 100;
     uint256 __amountOfETH = 1 ether;
