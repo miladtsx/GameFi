@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity >=0.8.4 <0.9.0;
 
-import '@openzeppelin/token/ERC721/IERC721.sol';
+import {IERC721} from '@openzeppelin/token/ERC721/IERC721.sol';
 
 interface ICryptoAnts is IERC721 {
   event EggsBought(address indexed _buyer, uint256 _amount);
@@ -15,6 +15,7 @@ interface ICryptoAnts is IERC721 {
 
   function buyEggs(uint256 _amount) external payable;
   function createAnt() external payable;
+  function sellAnt(uint256 _antId) external;
   function getContractBalance() external view returns (uint256);
   function getAntsCreated() external view returns (uint256);
 }

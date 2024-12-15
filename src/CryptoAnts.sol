@@ -1,17 +1,16 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity >=0.8.4 <0.9.0;
 
-import '@openzeppelin/token/ERC20/IERC20.sol';
-import '@openzeppelin/token/ERC721/ERC721.sol';
+import {ERC721} from '@openzeppelin/token/ERC721/ERC721.sol';
 
-import './ICryptoAnts.sol';
-import './IEgg.sol';
+import {ICryptoAnts} from './ICryptoAnts.sol';
+import {IEgg} from './IEgg.sol';
 import 'forge-std/console.sol';
 
 contract CryptoAnts is ERC721, ICryptoAnts {
   bool public locked = false;
-  mapping(uint256 => address) public antToOwner;
-  IEgg public immutable eggs;
+  mapping(uint256 _antId => address _owner) public antToOwner;
+  IEgg public immutable EGGS;
   uint256 public eggPrice = 0.01 ether;
   uint256 public antsCreated = 0;
 
@@ -24,7 +23,7 @@ contract CryptoAnts is ERC721, ICryptoAnts {
   }
 
   constructor(address _eggs) ERC721('Crypto Ants', 'ANTS') {
-    eggs = IEgg(_eggs);
+    EGGS = IEgg(_eggs);
   }
 
   function buyEggs(uint256 _amount) external payable override lock {
@@ -34,7 +33,7 @@ contract CryptoAnts is ERC721, ICryptoAnts {
 
     if (msg.value < totalCost) revert WrongEtherSent();
 
-    eggs.mint(msg.sender, _amount);
+    EGGS.mint(msg.sender, _amount);
 
     uint256 extraETH = msg.value - totalCost;
 
@@ -47,9 +46,9 @@ contract CryptoAnts is ERC721, ICryptoAnts {
   }
 
   function createAnt() external payable {
-    if (eggs.balanceOf(msg.sender) < 1) revert NoEggs();
+    if (EGGS.balanceOf(msg.sender) < 1) revert NoEggs();
     uint256 _antId = ++antsCreated;
-    eggs.burn(msg.sender, 1);
+    EGGS.burn(msg.sender, 1);
     _mint(msg.sender, _antId);
     antToOwner[_antId] = msg.sender;
     emit AntCreated(_antId);

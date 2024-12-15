@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity >=0.8.4 <0.9.0;
 
-import './IEgg.sol';
-import '@openzeppelin/token/ERC20/ERC20.sol';
+import {IEgg} from './IEgg.sol';
+import {ERC20} from '@openzeppelin/token/ERC20/ERC20.sol';
 import 'forge-std/console.sol';
 
 contract Egg is ERC20, IEgg {
