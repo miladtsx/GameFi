@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.4 <0.9.0;
 
+import {IERC721} from '@openzeppelin/token/ERC721/IERC721.sol';
 import {Test} from 'forge-std/Test.sol';
 import {console} from 'forge-std/console.sol';
 import {CryptoAnts, ICryptoAnts} from 'src/CryptoAnts.sol';
@@ -12,7 +13,7 @@ contract UnitTest is Test, TestUtils {
   ICryptoAnts internal _cryptoAnts;
   address internal _owner = makeAddr('owner');
   IEgg internal _eggs;
-  address _randomAddress = makeAddr('randomAddress');
+  address private _randomAddress = makeAddr('randomAddress');
 
   function setUp() public {
     vm.createSelectFork(vm.rpcUrl('sepolia'), _FORK_BLOCK);
@@ -143,5 +144,56 @@ contract UnitTest is Test, TestUtils {
     vm.stopPrank();
 
     assertEq(_eggs.balanceOf(_randomAddress), 0);
+  }
+
+  function testANTCanOnlyBeSoldByTheOwner() public {
+    deal(_randomAddress, 1 ether);
+    vm.startPrank(_randomAddress);
+    _cryptoAnts.buyEggs{value: 1 ether}(1);
+    uint8 _expectedAntId = 1;
+    vm.stopPrank();
+
+    hoax(makeAddr('nonOwnerAddress'), 1 ether);
+    vm.expectRevert('Unauthorized');
+    _cryptoAnts.sellAnt(_expectedAntId);
+  }
+
+  function testANTCanBeSoldForLessETHThanTheEGGPrice() public {
+    deal(_randomAddress, 1 ether);
+    vm.startPrank(_randomAddress);
+    _cryptoAnts.buyEggs{value: 1 ether}(1);
+    uint8 _expectedAntId = 1;
+
+    _cryptoAnts.createAnt();
+
+    uint256 _beforeSellBalance = _randomAddress.balance;
+
+    _cryptoAnts.sellAnt(_expectedAntId);
+
+    uint256 _afterSellBalance = _randomAddress.balance;
+
+    // 0.004 * 1e18 = 4000000000000000
+    assertEq(_afterSellBalance, _beforeSellBalance + 4_000_000_000_000_000);
+
+    vm.stopPrank();
+  }
+
+  function testBurnTheAntAfterTheUserSellsIt() public {
+    deal(_randomAddress, 1 ether);
+    vm.startPrank(_randomAddress);
+    uint8 _expectedAntId = 1;
+
+    _cryptoAnts.buyEggs{value: 1 ether}(1);
+    _cryptoAnts.createAnt();
+    assertEq(_cryptoAnts.ownerOf(_expectedAntId), _randomAddress);
+
+    vm.expectEmit(true, true, true, true);
+    emit IERC721.Transfer(_randomAddress, address(0), _expectedAntId);
+    _cryptoAnts.sellAnt(_expectedAntId);
+
+    vm.expectRevert('Unauthorized');
+    _cryptoAnts.sellAnt(_expectedAntId);
+
+    vm.stopPrank();
   }
 }

@@ -14,7 +14,7 @@ contract IntegrationTest is Test, TestUtils {
   ICryptoAnts internal _cryptoAnts;
   address internal _owner = makeAddr('owner');
   IEgg internal _eggs;
-  address _randomAddress = makeAddr('randomAddress');
+  address private _randomAddress = makeAddr('randomAddress');
 
   function setUp() public {
     vm.createSelectFork(vm.rpcUrl('sepolia'), _FORK_BLOCK);
@@ -60,9 +60,16 @@ contract IntegrationTest is Test, TestUtils {
     assertEq(_cryptoAnts.getAntsCreated(), 1);
   }
 
-  function testANTCanBeSoldForLessETHThanTheEGGPrice() public {}
-  function testSendFundsToTheUserWhoSellsAnts() public {}
-  function testBurnTheAntAfterTheUserSellsIt() public {}
+  function testANTCanBeSoldByTheOwner() public {
+    deal(_randomAddress, 1 ether);
+    vm.startPrank(_randomAddress);
+    _cryptoAnts.buyEggs{value: 1 ether}(1);
+    uint8 _expectedAntId = 1;
+    _cryptoAnts.createAnt();
+    _cryptoAnts.sellAnt(_expectedAntId);
+    vm.stopPrank();
+  }
+
   function testAnts_should_be_able_to_create_lay_eggs_once_every_10_minutes() public {}
   function testAnts_should_create_random_eggs_ranging_0_to_20() public {}
   function testAnts_should_die_randomly_when_laying_eggs() public {}
