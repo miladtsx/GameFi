@@ -1,17 +1,15 @@
-import '@openzeppelin/token/ERC20/ERC20.sol';
-import '@openzeppelin/token/ERC20/IERC20.sol';
-
-interface IEgg is IERC20 {
-  function mint(address, uint256) external;
-}
-
 //SPDX-License-Identifier: Unlicense
 pragma solidity >=0.8.4 <0.9.0;
+
+import './IEgg.sol';
+import '@openzeppelin/token/ERC20/ERC20.sol';
+import 'forge-std/console.sol';
 
 contract Egg is ERC20, IEgg {
   address private immutable _ants;
 
   constructor(address __ants) ERC20('EGG', 'EGG') {
+    require(address(__ants).code.length > 0, 'Invalid Ants');
     _ants = __ants;
   }
 
@@ -21,7 +19,13 @@ contract Egg is ERC20, IEgg {
     _mint(_to, _amount);
   }
 
-  function decimals() public view virtual override returns (uint8) {
+  function burn(address _from, uint256 _amount) external override {
+    //solhint-disable-next-line
+    require(msg.sender == _ants, 'Only CryptoAnts can burn eggs');
+    _burn(_from, _amount);
+  }
+
+  function decimals() public pure override(ERC20, IEgg) returns (uint8) {
     return 0;
   }
 }

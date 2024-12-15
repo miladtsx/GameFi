@@ -3,53 +3,64 @@ pragma solidity >=0.8.4 <0.9.0;
 
 import {Test} from 'forge-std/Test.sol';
 import {console} from 'forge-std/console.sol';
-import {CryptoAnts, ICryptoAnts} from 'src/CryptoAnts.sol';
-import {Egg, IEgg} from 'src/Egg.sol';
+import {CryptoAnts} from 'src/CryptoAnts.sol';
+import {Egg} from 'src/Egg.sol';
+import {ICryptoAnts} from 'src/ICryptoAnts.sol';
+import {IEgg} from 'src/IEgg.sol';
 import {TestUtils} from 'test/TestUtils.sol';
 
 contract IntegrationTest is Test, TestUtils {
-  uint256 internal constant FORK_BLOCK = 7_117_514;
+  uint256 internal constant _FORK_BLOCK = 7_117_514;
   ICryptoAnts internal _cryptoAnts;
   address internal _owner = makeAddr('owner');
   IEgg internal _eggs;
+  address _randomAddress = makeAddr('randomAddress');
 
   function setUp() public {
-    vm.createSelectFork(vm.rpcUrl('sepolia'), FORK_BLOCK);
+    vm.createSelectFork(vm.rpcUrl('sepolia'), _FORK_BLOCK);
     _eggs = IEgg(vm.computeCreateAddress(address(this), 2));
     _cryptoAnts = new CryptoAnts(address(_eggs));
     _eggs = new Egg(address(_cryptoAnts));
   }
 
   function testBuyEGGWithETH() public {
-    address __randomBuyerAccount = makeAddr('__randomBuyerAccount');
     uint8 __amountOfExpectedEggsToBuy = 100;
     uint256 __amountOfETH = 1 ether;
-    deal(__randomBuyerAccount, __amountOfETH);
+    deal(_randomAddress, __amountOfETH);
 
-    vm.startPrank(__randomBuyerAccount);
+    vm.startPrank(_randomAddress);
     _cryptoAnts.buyEggs{value: __amountOfETH}(__amountOfExpectedEggsToBuy);
     vm.stopPrank();
 
-    assertEq(_eggs.balanceOf(address(__randomBuyerAccount)), __amountOfExpectedEggsToBuy);
+    assertEq(_eggs.balanceOf(_randomAddress), __amountOfExpectedEggsToBuy);
+
+    assertEq(_cryptoAnts.getContractBalance(), __amountOfETH);
   }
 
   function testEGGCosts1CentETH() public {
-    address __randomBuyerAccount = makeAddr('__randomBuyerAccount');
     uint8 __amountOfExpectedEggsToBuy = 200; // 200 * 0.01 = 2 ether
     uint256 __amountOfETH = 2 ether;
-    deal(__randomBuyerAccount, __amountOfETH);
+    deal(_randomAddress, __amountOfETH);
 
-    vm.startPrank(__randomBuyerAccount);
+    vm.startPrank(_randomAddress);
     _cryptoAnts.buyEggs{value: __amountOfETH}(__amountOfExpectedEggsToBuy);
     vm.stopPrank();
 
-    assertEq(_eggs.balanceOf(address(__randomBuyerAccount)), __amountOfExpectedEggsToBuy);
-    assertEq(__randomBuyerAccount.balance, 0);
+    assertEq(_eggs.balanceOf(_randomAddress), __amountOfExpectedEggsToBuy);
+    assertEq(_randomAddress.balance, 0);
   }
 
-  function testEGGCanBeUsedToCreateAnANT() public {}
+  function testEGGCanBeUsedToCreateAnANT() public {
+    vm.startPrank(_randomAddress);
+    deal(_randomAddress, 1 ether);
+    _cryptoAnts.buyEggs{value: 1 ether}(1);
+
+    _cryptoAnts.createAnt();
+
+    assertEq(_cryptoAnts.getAntsCreated(), 1);
+  }
+
   function testANTCanBeSoldForLessETHThanTheEGGPrice() public {}
-  function testBuyAnEggAndCreateNewAnt() public {}
   function testSendFundsToTheUserWhoSellsAnts() public {}
   function testBurnTheAntAfterTheUserSellsIt() public {}
   function testAnts_should_be_able_to_create_lay_eggs_once_every_10_minutes() public {}
