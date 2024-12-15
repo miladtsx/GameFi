@@ -4,21 +4,27 @@ pragma solidity >=0.8.4 <0.9.0;
 import {IERC721} from '@openzeppelin/token/ERC721/IERC721.sol';
 import {Test} from 'forge-std/Test.sol';
 import {console} from 'forge-std/console.sol';
-import {CryptoAnts, ICryptoAnts} from 'src/CryptoAnts.sol';
-import {Egg, IEgg} from 'src/Egg.sol';
+import {CryptoAnts} from 'src/CryptoAnts.sol';
+import {Egg} from 'src/Egg.sol';
+import {ICryptoAnts} from 'src/ICryptoAnts.sol';
+import {IEgg} from 'src/IEgg.sol';
+import {IGovernance} from 'src/IGovernance.sol';
 import {TestUtils} from 'test/TestUtils.sol';
 
 contract UnitTest is Test, TestUtils {
   uint256 internal constant _FORK_BLOCK = 7_117_514;
   ICryptoAnts internal _cryptoAnts;
+  IGovernance internal _governance;
   address internal _owner = makeAddr('owner');
   IEgg internal _eggs;
   address private _randomAddress = makeAddr('randomAddress');
+  address private _governerAddress = makeAddr('governerAddress');
 
   function setUp() public {
     vm.createSelectFork(vm.rpcUrl('sepolia'), _FORK_BLOCK);
     _eggs = IEgg(vm.computeCreateAddress(address(this), 2));
-    _cryptoAnts = new CryptoAnts(address(_eggs));
+    _cryptoAnts = new CryptoAnts(address(_eggs), _governerAddress);
+    _governance = IGovernance(address(_cryptoAnts));
     _eggs = new Egg(address(_cryptoAnts));
   }
 
@@ -195,5 +201,34 @@ contract UnitTest is Test, TestUtils {
     _cryptoAnts.sellAnt(_expectedAntId);
 
     vm.stopPrank();
+  }
+
+  function testChangeEggPrice() public {
+    vm.prank(_governerAddress);
+    _governance.changeEggPrice(1 ether);
+
+    vm.prank(_randomAddress);
+    deal(_randomAddress, 1 ether);
+    _cryptoAnts.buyEggs{value: 1 ether}(1);
+
+    assertEq(_randomAddress.balance, 0);
+    assertEq(_eggs.balanceOf(_randomAddress), 1);
+  }
+
+  function testChangeEggPriceEmits() public {
+    vm.prank(_governerAddress);
+    vm.expectEmit(false, false, false, true);
+    emit IGovernance.EggPriceChanged(1 ether);
+    _governance.changeEggPrice(1 ether);
+  }
+
+  function testGovernanceAccessControl() public {
+    vm.expectRevert('Unauthorized: Only governer');
+    _governance.changeEggPrice(1 ether);
+
+    vm.prank(_governerAddress);
+    vm.expectEmit(false, false, false, true);
+    emit IGovernance.EggPriceChanged(1 ether);
+    _governance.changeEggPrice(1 ether);
   }
 }

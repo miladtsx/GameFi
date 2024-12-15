@@ -1,17 +1,16 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity >=0.8.4 <0.9.0;
 
-import {ERC721} from '@openzeppelin/token/ERC721/ERC721.sol';
-
+import {Governance} from './Governance.sol';
 import {ICryptoAnts} from './ICryptoAnts.sol';
 import {IEgg} from './IEgg.sol';
+import {ERC721} from '@openzeppelin/token/ERC721/ERC721.sol';
 import 'forge-std/console.sol';
 
-contract CryptoAnts is ERC721, ICryptoAnts {
+contract CryptoAnts is ERC721, Governance, ICryptoAnts {
   bool public locked = false;
-  mapping(uint256 _antId => address _owner) public antToOwner;
+  mapping(uint256 => address) public antToOwner;
   IEgg public immutable EGGS;
-  uint256 public eggPrice = 0.01 ether;
   uint256 public antsCreated = 0;
 
   modifier lock() {
@@ -22,14 +21,14 @@ contract CryptoAnts is ERC721, ICryptoAnts {
     locked = false;
   }
 
-  constructor(address _eggs) ERC721('Crypto Ants', 'ANTS') {
+  constructor(address _eggs, address _governerAddress) ERC721('Crypto Ants', 'ANTS') Governance(_governerAddress) {
     EGGS = IEgg(_eggs);
   }
 
   function buyEggs(uint256 _amount) external payable override lock {
     require(_amount > 0, 'Amount must be greater than zero');
 
-    uint256 totalCost = _amount * eggPrice;
+    uint256 totalCost = _amount * _eggPrice;
 
     if (msg.value < totalCost) revert WrongEtherSent();
 

@@ -10,7 +10,7 @@ contract Deploy is Script {
     address deployer = vm.rememberKey(vm.envUint('DEPLOYER_PRIVATE_KEY'));
     vm.startBroadcast(deployer);
     IEgg _eggs = IEgg(vm.computeCreateAddress(deployer, 1));
-    ICryptoAnts _cryptoAnts = new CryptoAnts(address(_eggs));
+    ICryptoAnts _cryptoAnts = new CryptoAnts(address(_eggs), deployer);
     _eggs = new Egg(address(_cryptoAnts));
     vm.stopBroadcast();
   }
