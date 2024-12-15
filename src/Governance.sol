@@ -5,6 +5,7 @@ import {IGovernance} from './IGovernance.sol';
 
 contract Governance is IGovernance {
   uint256 public _eggPrice = 0.01 ether;
+  uint256 public EGG_LAYING_COOLDOWN = 10 minutes;
   address public _governance;
 
   modifier onlyGovernance() {
@@ -16,9 +17,13 @@ contract Governance is IGovernance {
     _governance = __governance;
   }
 
-  // Function to change the price of EGGs
-  function changeEggPrice(uint256 newPrice) external override onlyGovernance {
-    _eggPrice = newPrice;
-    emit EggPriceChanged(newPrice);
+  function changeEggPrice(uint256 __newPrice) external override onlyGovernance {
+    _eggPrice = __newPrice;
+    emit EggPriceChanged(__newPrice);
+  }
+
+  function changeEggLayingCooldown(uint256 __newCooldown) external override onlyGovernance {
+    EGG_LAYING_COOLDOWN = __newCooldown;
+    emit EggLayingCooldownChanged(__newCooldown);
   }
 }

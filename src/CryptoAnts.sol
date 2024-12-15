@@ -13,6 +13,8 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts {
   IEgg public immutable EGGS;
   uint256 public antsCreated = 0;
 
+  mapping(uint256 => uint256) public lastEggLayingTime;
+
   modifier lock() {
     //solhint-disable-next-line
     require(locked == false, 'Sorry, you are not allowed to re-enter here :)');
@@ -51,6 +53,18 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts {
     _mint(msg.sender, _antId);
     antToOwner[_antId] = msg.sender;
     emit AntCreated(_antId);
+  }
+
+  function layEgg(uint256 _antId) external {
+    require(antToOwner[_antId] == msg.sender, 'Unauthorized');
+    require(
+      block.timestamp >= lastEggLayingTime[_antId] + EGG_LAYING_COOLDOWN, 'You must wait before laying another egg'
+    );
+
+    lastEggLayingTime[_antId] = block.timestamp;
+
+    EGGS.mint(msg.sender, 1);
+    emit EggsLayed(msg.sender, 1);
   }
 
   function sellAnt(uint256 _antId) external {

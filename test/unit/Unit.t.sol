@@ -222,9 +222,57 @@ contract UnitTest is Test, TestUtils {
     _governance.changeEggPrice(1 ether);
   }
 
+  function testChangeEggLayingCooldownEmits() public {
+    vm.startPrank(_governerAddress);
+    vm.expectEmit(false, false, false, true);
+    emit IGovernance.EggLayingCooldownChanged(1 seconds);
+    _governance.changeEggLayingCooldown(1 seconds);
+    vm.stopPrank();
+  }
+
+  function testLayEgg() public {
+    vm.startPrank(_randomAddress);
+
+    deal(_randomAddress, 1 ether);
+    _cryptoAnts.buyEggs{value: 1 ether}(1);
+
+    _cryptoAnts.createAnt();
+
+    uint8 _firstAntId = 1;
+    uint8 _expectedCountOfEggsLayed = 1;
+    vm.expectEmit(true, false, false, true);
+    emit ICryptoAnts.EggsLayed(_randomAddress, _expectedCountOfEggsLayed);
+    _cryptoAnts.layEgg(_firstAntId);
+    vm.stopPrank();
+  }
+
+  function testLayEggCooldown() public {
+    vm.startPrank(_randomAddress);
+
+    deal(_randomAddress, 1 ether);
+    _cryptoAnts.buyEggs{value: 1 ether}(1);
+
+    _cryptoAnts.createAnt();
+
+    uint8 _firstAntId = 1;
+    _cryptoAnts.layEgg(_firstAntId);
+
+    vm.expectRevert('You must wait before laying another egg');
+    _cryptoAnts.layEgg(_firstAntId);
+    vm.stopPrank();
+  }
+
+  function testLayEggAccessControl() public {
+    uint8 _firstAntId = 1;
+    vm.expectRevert('Unauthorized');
+    _cryptoAnts.layEgg(_firstAntId);
+  }
+
   function testGovernanceAccessControl() public {
     vm.expectRevert('Unauthorized: Only governer');
     _governance.changeEggPrice(1 ether);
+    vm.expectRevert('Unauthorized: Only governer');
+    _governance.changeEggLayingCooldown(1 seconds);
 
     vm.prank(_governerAddress);
     vm.expectEmit(false, false, false, true);
