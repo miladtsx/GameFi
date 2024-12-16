@@ -27,7 +27,10 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts {
     _;
   }
 
-  constructor(address eggErc20, address governor) ERC721('Crypto Ants', 'ANTS') Governance(governor) {
+  constructor(
+    address eggErc20,
+    address governor
+  ) ERC721('Crypto Ants', 'ANTS') Governance(governor) noZeroAddress(eggErc20) noZeroAddress(governor) {
     EGGS = IEgg(eggErc20);
   }
 

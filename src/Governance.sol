@@ -14,8 +14,12 @@ contract Governance is IGovernance {
     _;
   }
 
-  constructor(address initialGovernor) {
-    require(initialGovernor != address(0), 'No Governor set!');
+  modifier noZeroAddress(address addr) {
+    require(addr != address(0), 'Address cannot be zero');
+    _;
+  }
+
+  constructor(address initialGovernor) noZeroAddress(initialGovernor) {
     governor = initialGovernor;
   }
 

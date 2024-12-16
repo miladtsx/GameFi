@@ -34,7 +34,7 @@ contract UnitTest is Test, TestUtils {
   }
 
   function testAntDeploymentChecksGovernorAddress() public {
-    vm.expectRevert('No Governor set!');
+    vm.expectRevert('Address cannot be zero');
     new CryptoAnts(address(_eggs), address(0));
   }
 
