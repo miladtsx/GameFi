@@ -43,29 +43,29 @@ contract IntegrationTest is Test, TestUtils {
   }
 
   function testBuyEGGWithETH() public {
-    uint8 __amountOfExpectedEggsToBuy = 100;
-    uint256 __amountOfETH = 1 ether;
-    deal(_randomAddress, __amountOfETH);
+    uint8 amountOfExpectedEggsToBuy = 100;
+    uint256 amountOfETH = 1 ether;
+    deal(_randomAddress, amountOfETH);
 
     vm.startPrank(_randomAddress);
-    _cryptoAnts.buyEggs{value: __amountOfETH}(__amountOfExpectedEggsToBuy);
+    _cryptoAnts.buyEggs{value: amountOfETH}(amountOfExpectedEggsToBuy);
     vm.stopPrank();
 
-    assertEq(_eggs.balanceOf(_randomAddress), __amountOfExpectedEggsToBuy);
+    assertEq(_eggs.balanceOf(_randomAddress), amountOfExpectedEggsToBuy);
 
-    assertEq(_cryptoAnts.getContractBalance(), __amountOfETH);
+    assertEq(_cryptoAnts.getContractBalance(), amountOfETH);
   }
 
   function testEGGCosts1CentETH() public {
-    uint8 __amountOfExpectedEggsToBuy = 200; // 200 * 0.01 = 2 ether
-    uint256 __amountOfETH = 2 ether;
-    deal(_randomAddress, __amountOfETH);
+    uint8 amountOfExpectedEggsToBuy = 200; // 200 * 0.01 = 2 ether
+    uint256 amountOfETH = 2 ether;
+    deal(_randomAddress, amountOfETH);
 
     vm.startPrank(_randomAddress);
-    _cryptoAnts.buyEggs{value: __amountOfETH}(__amountOfExpectedEggsToBuy);
+    _cryptoAnts.buyEggs{value: amountOfETH}(amountOfExpectedEggsToBuy);
     vm.stopPrank();
 
-    assertEq(_eggs.balanceOf(_randomAddress), __amountOfExpectedEggsToBuy);
+    assertEq(_eggs.balanceOf(_randomAddress), amountOfExpectedEggsToBuy);
     assertEq(_randomAddress.balance, 0);
   }
 
@@ -89,9 +89,9 @@ contract IntegrationTest is Test, TestUtils {
     vm.stopPrank();
   }
 
-  function testGovernanceChangeEggPrice() public {
+  function testGovernancesetEggPrice() public {
     vm.prank(_governerAddress);
-    _governance.changeEggPrice(1 ether);
+    _governance.setEggPrice(1 ether);
 
     vm.prank(_randomAddress);
     deal(_randomAddress, 1 ether);
@@ -110,16 +110,16 @@ contract IntegrationTest is Test, TestUtils {
 
     assertEq(_eggs.balanceOf(_randomAddress), 0);
 
-    uint8 _firstAntId = 1;
-    _cryptoAnts.layEgg(_firstAntId);
+    uint8 firstAntId = 1;
+    _cryptoAnts.layEgg(firstAntId);
 
     vm.warp(block.timestamp + _governanceConteact.EGG_LAYING_COOLDOWN() - 1);
 
     vm.expectRevert('cooldowning...');
-    _cryptoAnts.layEgg(_firstAntId);
+    _cryptoAnts.layEgg(firstAntId);
 
     vm.warp(block.timestamp + 1);
-    _cryptoAnts.layEgg(_firstAntId);
+    _cryptoAnts.layEgg(firstAntId);
 
     vm.stopPrank();
   }
@@ -137,15 +137,15 @@ contract IntegrationTest is Test, TestUtils {
 
     assertEq(_eggs.balanceOf(_randomAddress), 0);
 
-    uint8 _firstAntId = 1;
+    uint8 firstAntId = 1;
 
     for (uint256 i = 0; i < 100; i++) {
-      uint256 __preLayEggBalance = _eggs.balanceOf(_randomAddress);
-      _cryptoAnts.layEgg(_firstAntId);
+      uint256 preLayEggBalance = _eggs.balanceOf(_randomAddress);
+      _cryptoAnts.layEgg(firstAntId);
 
-      uint256 __postLayEggBalance = _eggs.balanceOf(_randomAddress);
+      uint256 postLayEggBalance = _eggs.balanceOf(_randomAddress);
 
-      uint8 _amountOflayedEggs = uint8(__postLayEggBalance - __preLayEggBalance);
+      uint8 _amountOflayedEggs = uint8(postLayEggBalance - preLayEggBalance);
       require(0 <= _amountOflayedEggs && _amountOflayedEggs <= 20, 'Invalid egg count');
     }
     vm.stopPrank();
@@ -165,22 +165,22 @@ contract IntegrationTest is Test, TestUtils {
     deal(_randomAddress, 1 ether);
     _cryptoAnts.buyEggs{value: 1 ether}(1);
     _cryptoAnts.createAnt();
-    uint8 _antId = 1;
+    uint8 antId = 1;
 
-    bool _didAntDied = false;
+    bool didAntDied = false;
 
     for (uint8 i = 0; i < 100; i++) {
-      _cryptoAnts.layEgg(_antId);
+      _cryptoAnts.layEgg(antId);
 
       //Checking if the ant has died
-      if (_cryptoAntsContract.antToOwner(_antId) == address(0)) {
-        assertEq(_cryptoAntsContract.antToOwner(_antId), address(0), 'Ant should have died');
-        _didAntDied = true;
+      if (_cryptoAntsContract.antToOwner(antId) == address(0)) {
+        assertEq(_cryptoAntsContract.antToOwner(antId), address(0), 'Ant should have died');
+        didAntDied = true;
         break;
       }
     }
 
-    assertEq(_didAntDied, true, 'Ant never died');
+    assertEq(didAntDied, true, 'Ant never died');
 
     vm.stopPrank();
   }
@@ -205,10 +205,6 @@ contract IntegrationTest is Test, TestUtils {
     vm.deal(_randomAddress, 1 ether);
     _cryptoAnts.buyEggs{value: 1 ether}(1);
     _cryptoAnts.createAnt();
-  }
-
-  function _initializeAntStats() internal pure returns (AntStats memory) {
-    return AntStats({totalAnts: 1, aliveAnts: 1, eggsLayed: 0, antsBorn: 0, antsDied: 0, noEggLays: 0});
   }
 
   function _layEggsAndCreateAnts(AntStats memory stats, uint256 targetCount) internal returns (AntStats memory) {
@@ -249,6 +245,10 @@ contract IntegrationTest is Test, TestUtils {
       stats.noEggLays++;
     }
     return stats;
+  }
+
+  function _initializeAntStats() internal pure returns (AntStats memory) {
+    return AntStats({totalAnts: 1, aliveAnts: 1, eggsLayed: 0, antsBorn: 0, antsDied: 0, noEggLays: 0});
   }
 
   function _logAntJourney(AntStats memory stats) internal pure {

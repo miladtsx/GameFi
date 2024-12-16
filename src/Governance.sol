@@ -4,37 +4,38 @@ pragma solidity >=0.8.4 <0.9.0;
 import {IGovernance} from './IGovernance.sol';
 
 contract Governance is IGovernance {
-  uint256 public _eggPrice = 0.01 ether;
+  uint256 public eggPrice = 0.01 ether;
   uint256 public EGG_LAYING_COOLDOWN = 10 minutes;
-  address public _governance;
-  uint8 public _antDeathProbability = 1; // 1% chance of Ant dying when laying Egg.
+  address public governor;
+  uint8 public antDeathProbability = 1; // 1% chance of Ant dying when laying Egg.
 
   modifier onlyGovernance() {
-    require(msg.sender == _governance, 'Unauthorized: Only governer');
+    require(msg.sender == governor, 'Unauthorized: Only governer');
     _;
   }
 
-  constructor(address __governance) {
-    _governance = __governance;
+  constructor(address initialGovernor) {
+    require(initialGovernor != address(0), 'No Governor set!');
+    governor = initialGovernor;
   }
 
-  function changeEggPrice(uint256 __newPrice) external override onlyGovernance {
-    _eggPrice = __newPrice;
-    emit EggPriceChanged(__newPrice);
+  function setEggPrice(uint256 newPrice) external override onlyGovernance {
+    eggPrice = newPrice;
+    emit EggPriceChanged(newPrice);
   }
 
-  function setEggLayingCooldown(uint256 __newCooldown) external override onlyGovernance {
-    EGG_LAYING_COOLDOWN = __newCooldown;
-    emit EggLayingCooldownChanged(__newCooldown);
+  function setEggLayingCooldown(uint256 newCooldown) external override onlyGovernance {
+    EGG_LAYING_COOLDOWN = newCooldown;
+    emit EggLayingCooldownChanged(newCooldown);
   }
 
   /**
    * @dev Sets the probability of an ant dying when laying eggs.
-   * @param __probability The probability percentage (0-100).
+   * @param probability The probability percentage (0-100).
    */
-  function setAntDeathProbability(uint8 __probability) external onlyGovernance {
-    require(__probability <= 100, 'Probability must be between 0 and 100');
-    _antDeathProbability = __probability;
-    emit AntLayingDeathProbabilityChanged(__probability);
+  function setAntDeathProbability(uint8 probability) external onlyGovernance {
+    require(probability <= 100, 'Probability must be between 0 and 100');
+    antDeathProbability = probability;
+    emit AntLayingDeathProbabilityChanged(probability);
   }
 }
