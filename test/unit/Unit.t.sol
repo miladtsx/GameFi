@@ -239,11 +239,11 @@ contract UnitTest is Test, TestUtils {
     _governance.changeEggPrice(1 ether);
   }
 
-  function testChangeEggLayingCooldownEmits() public {
+  function testsetEggLayingCooldownEmits() public {
     vm.startPrank(_governerAddress);
     vm.expectEmit(false, false, false, true);
     emit IGovernance.EggLayingCooldownChanged(1 seconds);
-    _governance.changeEggLayingCooldown(1 seconds);
+    _governance.setEggLayingCooldown(1 seconds);
     vm.stopPrank();
   }
 
@@ -320,7 +320,7 @@ contract UnitTest is Test, TestUtils {
     vm.expectRevert('Unauthorized: Only governer');
     _governance.changeEggPrice(1 ether);
     vm.expectRevert('Unauthorized: Only governer');
-    _governance.changeEggLayingCooldown(1 seconds);
+    _governance.setEggLayingCooldown(1 seconds);
     vm.expectRevert('Unauthorized: Only governer');
     _governance.setAntDeathProbability(1);
 

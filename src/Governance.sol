@@ -23,7 +23,7 @@ contract Governance is IGovernance {
     emit EggPriceChanged(__newPrice);
   }
 
-  function changeEggLayingCooldown(uint256 __newCooldown) external override onlyGovernance {
+  function setEggLayingCooldown(uint256 __newCooldown) external override onlyGovernance {
     EGG_LAYING_COOLDOWN = __newCooldown;
     emit EggLayingCooldownChanged(__newCooldown);
   }

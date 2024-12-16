@@ -111,7 +111,7 @@ contract IntegrationTest is Test, TestUtils {
 
   function testAntsShouldCreateRandomEggsRanging0To20() public {
     vm.prank(_governerAddress);
-    _governance.changeEggLayingCooldown(0);
+    _governance.setEggLayingCooldown(0);
 
     vm.startPrank(_randomAddress);
 
@@ -143,7 +143,7 @@ contract IntegrationTest is Test, TestUtils {
   function testAntsShouldDieRandomlyWhenLayingEggs() public {
     // Setting up the test environment
     vm.startPrank(_governerAddress);
-    _governance.changeEggLayingCooldown(0); // Setting cooldown to 0 for testing purposes
+    _governance.setEggLayingCooldown(0); // Setting cooldown to 0 for testing purposes
     _governance.setAntDeathProbability(80); // Increase the chance of Ant laying death to 80%
     vm.stopPrank();
 
