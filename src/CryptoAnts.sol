@@ -80,11 +80,11 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts {
     }
   }
 
-  function sellAnt(uint256 __antId) external onlyAntOwner(__antId) {
+  function sellAnt(uint256 __antId) external onlyAntOwner(__antId) lock {
+    _killAnt(__antId);
     // solhint-disable-next-line
     (bool success,) = msg.sender.call{value: 0.004 ether}('');
     require(success, 'Whoops, this call failed!');
-    _killAnt(__antId);
     emit AntSold(msg.sender, __antId);
   }
 
