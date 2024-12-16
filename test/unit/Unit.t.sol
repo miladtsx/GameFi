@@ -164,6 +164,23 @@ contract UnitTest is Test, TestUtils {
     _cryptoAnts.sellAnt(_expectedAntId);
   }
 
+  function testANTSellEmit() public {
+    deal(_randomAddress, 1 ether);
+    vm.startPrank(_randomAddress);
+
+    _cryptoAnts.buyEggs{value: 1 ether}(1);
+
+    _cryptoAnts.createAnt();
+
+    uint8 _expectedAntId = 1;
+
+    vm.expectEmit(true, true, false, true);
+    emit ICryptoAnts.AntSold(_randomAddress, _expectedAntId);
+
+    _cryptoAnts.sellAnt(_expectedAntId);
+    vm.stopPrank();
+  }
+
   function testANTCanBeSoldForLessETHThanTheEGGPrice() public {
     deal(_randomAddress, 1 ether);
     vm.startPrank(_randomAddress);
@@ -261,6 +278,38 @@ contract UnitTest is Test, TestUtils {
     vm.stopPrank();
   }
 
+  function testLayEggAntDeathProbabilityCorrectness() public {
+    vm.prank(_governerAddress);
+    vm.expectRevert('Probability must be between 0 and 100');
+    _governance.setAntDeathProbability(101);
+    vm.stopPrank();
+  }
+
+  function testLayEggAntDeath() public {
+    vm.prank(_governerAddress);
+    _governance.setAntDeathProbability(100);
+
+    vm.startPrank(_randomAddress);
+    deal(_randomAddress, 1 ether);
+    _cryptoAnts.buyEggs{value: 1 ether}(1);
+
+    _cryptoAnts.createAnt();
+
+    uint8 _firstAntId = 1;
+
+    vm.expectEmit(true, true, false, true);
+    emit ICryptoAnts.AntDied(_randomAddress, _firstAntId);
+
+    _cryptoAnts.layEgg(_firstAntId);
+
+    assertEq(_eggs.balanceOf(_randomAddress), 0);
+
+    // The Ant is dead! there is no Ant you own, so:
+    vm.expectRevert('Unauthorized');
+    _cryptoAnts.layEgg(_firstAntId);
+    vm.stopPrank();
+  }
+
   function testLayEggAccessControl() public {
     uint8 _firstAntId = 1;
     vm.expectRevert('Unauthorized');
@@ -272,6 +321,8 @@ contract UnitTest is Test, TestUtils {
     _governance.changeEggPrice(1 ether);
     vm.expectRevert('Unauthorized: Only governer');
     _governance.changeEggLayingCooldown(1 seconds);
+    vm.expectRevert('Unauthorized: Only governer');
+    _governance.setAntDeathProbability(1);
 
     vm.prank(_governerAddress);
     vm.expectEmit(false, false, false, true);

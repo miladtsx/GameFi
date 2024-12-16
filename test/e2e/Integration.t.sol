@@ -111,6 +111,9 @@ contract IntegrationTest is Test, TestUtils {
   }
 
   function testAntsShouldCreateRandomEggsRanging0To20() public {
+    vm.prank(_governerAddress);
+    _governance.changeEggLayingCooldown(0);
+
     vm.startPrank(_randomAddress);
 
     deal(_randomAddress, 1 ether);
@@ -121,10 +124,17 @@ contract IntegrationTest is Test, TestUtils {
     assertEq(_eggs.balanceOf(_randomAddress), 0);
 
     uint8 _firstAntId = 1;
-    _cryptoAnts.layEgg(_firstAntId);
 
-    uint8 _layedEggs = uint8(_eggs.balanceOf(_randomAddress));
-    require(_layedEggs >= 0 && _layedEggs <= 20, 'Number of laid eggs must be between 0 and 20');
+    for (uint256 i = 0; i < 100; i++) {
+      uint256 __preLayEggBalance = _eggs.balanceOf(_randomAddress);
+      _cryptoAnts.layEgg(_firstAntId);
+
+      uint256 __postLayEggBalance = _eggs.balanceOf(_randomAddress);
+
+      uint8 _amountOflayedEggs = uint8(__postLayEggBalance - __preLayEggBalance);
+
+      require(_amountOflayedEggs >= 0 && _amountOflayedEggs <= 20, 'Number of laid eggs must be between 0 and 20');
+    }
     vm.stopPrank();
   }
 

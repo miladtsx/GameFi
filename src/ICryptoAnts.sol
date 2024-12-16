@@ -6,7 +6,8 @@ import {IERC721} from '@openzeppelin/token/ERC721/IERC721.sol';
 interface ICryptoAnts is IERC721 {
   event EggsBought(address indexed _buyer, uint256 _amount);
   event EggsLayed(address indexed _owner, uint256 _amount);
-  event AntSold();
+  event AntDied(address indexed _owner, uint256 indexed _antId);
+  event AntSold(address indexed _owner, uint256 indexed _antId);
   event AntCreated(uint256 indexed _antId);
 
   error NoEggs();

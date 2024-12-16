@@ -8,19 +8,19 @@ import {ERC721} from '@openzeppelin/token/ERC721/ERC721.sol';
 import 'forge-std/console.sol';
 
 contract CryptoAnts is ERC721, Governance, ICryptoAnts {
-  bool public locked = false;
-  mapping(uint256 => address) public antToOwner;
+  bool public _locked = false;
+  mapping(uint256 => address) public _antToOwner;
   IEgg public immutable EGGS;
-  uint256 public antsCreated = 0;
+  uint256 public _antsCreated = 0;
 
-  mapping(uint256 => uint256) public lastEggLayingTime;
+  mapping(uint256 => uint256) public _lastEggLayingTime;
 
   modifier lock() {
     //solhint-disable-next-line
-    require(locked == false, 'Sorry, you are not allowed to re-enter here :)');
-    locked = true;
+    require(_locked == false, 'Sorry, you are not allowed to re-enter here :)');
+    _locked = true;
     _;
-    locked = false;
+    _locked = false;
   }
 
   constructor(address _eggs, address _governerAddress) ERC721('Crypto Ants', 'ANTS') Governance(_governerAddress) {
@@ -48,35 +48,43 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts {
 
   function createAnt() external payable {
     if (EGGS.balanceOf(msg.sender) < 1) revert NoEggs();
-    uint256 _antId = ++antsCreated;
+    uint256 _antId = ++_antsCreated;
     EGGS.burn(msg.sender, 1);
     _mint(msg.sender, _antId);
-    antToOwner[_antId] = msg.sender;
+    _antToOwner[_antId] = msg.sender;
     emit AntCreated(_antId);
   }
 
-  function layEgg(uint256 _antId) external {
-    require(antToOwner[_antId] == msg.sender, 'Unauthorized');
+  function layEgg(uint256 __antId) external {
+    require(_antToOwner[__antId] == msg.sender, 'Unauthorized');
     require(
-      block.timestamp >= lastEggLayingTime[_antId] + EGG_LAYING_COOLDOWN, 'You must wait before laying another egg'
+      block.timestamp >= _lastEggLayingTime[__antId] + EGG_LAYING_COOLDOWN, 'You must wait before laying another egg'
     );
 
-    lastEggLayingTime[_antId] = block.timestamp;
+    // randomness factor
+    uint256 __randomness = uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender, __antId)));
 
-    // Generate a random number of eggs to mint (0 to 20)
-    uint256 numberOfEggs = uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender))) % 21;
+    // probability of the Ant dying
+    if ((__randomness % 100) < _antDeathProbability) {
+      _killAnt(__antId);
+      emit AntDied(msg.sender, __antId);
+    } else {
+      _lastEggLayingTime[__antId] = block.timestamp;
 
-    EGGS.mint(msg.sender, numberOfEggs);
-    emit EggsLayed(msg.sender, numberOfEggs);
+      uint256 __numberOfEggsToMint = __randomness % 21; // [0, 20]
+
+      EGGS.mint(msg.sender, __numberOfEggsToMint);
+      emit EggsLayed(msg.sender, __numberOfEggsToMint);
+    }
   }
 
-  function sellAnt(uint256 _antId) external {
-    require(antToOwner[_antId] == msg.sender, 'Unauthorized');
+  function sellAnt(uint256 __antId) external {
+    require(_antToOwner[__antId] == msg.sender, 'Unauthorized');
     // solhint-disable-next-line
     (bool success,) = msg.sender.call{value: 0.004 ether}('');
     require(success, 'Whoops, this call failed!');
-    delete antToOwner[_antId];
-    _burn(_antId);
+    _killAnt(__antId);
+    emit AntSold(msg.sender, __antId);
   }
 
   function getContractBalance() external view returns (uint256) {
@@ -84,6 +92,11 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts {
   }
 
   function getAntsCreated() external view returns (uint256) {
-    return antsCreated;
+    return _antsCreated;
+  }
+
+  function _killAnt(uint256 __antId) private {
+    delete _antToOwner[__antId];
+    _burn(__antId);
   }
 }
