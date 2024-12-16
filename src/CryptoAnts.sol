@@ -23,6 +23,11 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts {
     _locked = false;
   }
 
+  modifier onlyAntOwner(uint256 __antId) {
+    require(_antToOwner[__antId] == msg.sender, 'Unauthorized');
+    _;
+  }
+
   constructor(address _eggs, address _governerAddress) ERC721('Crypto Ants', 'ANTS') Governance(_governerAddress) {
     EGGS = IEgg(_eggs);
   }
@@ -55,8 +60,7 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts {
     emit AntCreated(_antId);
   }
 
-  function layEgg(uint256 __antId) external {
-    require(_antToOwner[__antId] == msg.sender, 'Unauthorized');
+  function layEgg(uint256 __antId) external onlyAntOwner(__antId) {
     require(
       block.timestamp >= _lastEggLayingTime[__antId] + EGG_LAYING_COOLDOWN, 'You must wait before laying another egg'
     );
@@ -78,8 +82,7 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts {
     }
   }
 
-  function sellAnt(uint256 __antId) external {
-    require(_antToOwner[__antId] == msg.sender, 'Unauthorized');
+  function sellAnt(uint256 __antId) external onlyAntOwner(__antId) {
     // solhint-disable-next-line
     (bool success,) = msg.sender.call{value: 0.004 ether}('');
     require(success, 'Whoops, this call failed!');
