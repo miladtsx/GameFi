@@ -6,15 +6,14 @@ import {console} from 'forge-std/console.sol';
 import {CryptoAnts} from 'src/CryptoAnts.sol';
 import {Egg} from 'src/Egg.sol';
 
-import {ICryptoAnts} from 'src/ICryptoAnts.sol';
+import {Governance} from 'src/Governance.sol';
 import {IEgg} from 'src/IEgg.sol';
-import {IGovernance} from 'src/IGovernance.sol';
 import {TestUtils} from 'test/TestUtils.sol';
 
 contract IntegrationTest is Test, TestUtils {
   uint256 internal constant _FORK_BLOCK = 7_117_514;
-  ICryptoAnts internal _cryptoAnts;
-  IGovernance internal _governance;
+  CryptoAnts internal _cryptoAnts;
+  Governance internal _governance;
   address internal _owner = makeAddr('owner');
   IEgg internal _eggs;
   address private _randomAddress = makeAddr('randomAddress');
@@ -24,7 +23,7 @@ contract IntegrationTest is Test, TestUtils {
     vm.createSelectFork(vm.rpcUrl('sepolia'), _FORK_BLOCK);
     _eggs = IEgg(vm.computeCreateAddress(address(this), 2));
     _cryptoAnts = new CryptoAnts(address(_eggs), _governerAddress);
-    _governance = IGovernance(address(_cryptoAnts));
+    _governance = Governance(address(_cryptoAnts));
     _eggs = new Egg(address(_cryptoAnts));
   }
 
@@ -138,7 +137,35 @@ contract IntegrationTest is Test, TestUtils {
     vm.stopPrank();
   }
 
-  function testAnts_should_die_randomly_when_laying_eggs() public {}
+  /**
+   * Simulating multiple egg laying attempts to test the randomness of ant death
+   */
+  function testAntsShouldDieRandomlyWhenLayingEggs() public {
+    // Setting up the test environment
+    vm.startPrank(_governerAddress);
+    _governance.changeEggLayingCooldown(0); // Setting cooldown to 0 for testing purposes
+    _governance.setAntDeathProbability(80); // Increase the chance of Ant laying death to 80%
+    vm.stopPrank();
+
+    vm.startPrank(_randomAddress);
+    deal(_randomAddress, 1 ether);
+    _cryptoAnts.buyEggs{value: 1 ether}(1);
+    _cryptoAnts.createAnt();
+    uint8 _antId = 1;
+
+    for (uint8 i = 0; i < 100; i++) {
+      _cryptoAnts.layEgg(_antId);
+
+      //Checking if the ant has died
+      if (_cryptoAnts._antToOwner(_antId) == address(0)) {
+        assertEq(_cryptoAnts._antToOwner(_antId), address(0), 'Ant should have died');
+        break; // Exit the loop if the Ant is dead
+      } else {
+        assertEq(_cryptoAnts._antToOwner(_antId), _randomAddress, 'Ant should be alive');
+      }
+    }
+    vm.stopPrank();
+  }
 
   /*
     This is a completely optional test.

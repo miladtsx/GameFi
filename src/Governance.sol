@@ -7,7 +7,7 @@ contract Governance is IGovernance {
   uint256 public _eggPrice = 0.01 ether;
   uint256 public EGG_LAYING_COOLDOWN = 10 minutes;
   address public _governance;
-  uint256 public _antDeathProbability;
+  uint8 public _antDeathProbability = 1; // 1% chance of Ant dying when laying Egg.
 
   modifier onlyGovernance() {
     require(msg.sender == _governance, 'Unauthorized: Only governer');
@@ -32,7 +32,7 @@ contract Governance is IGovernance {
    * @dev Sets the probability of an ant dying when laying eggs.
    * @param __probability The probability percentage (0-100).
    */
-  function setAntDeathProbability(uint256 __probability) external onlyGovernance {
+  function setAntDeathProbability(uint8 __probability) external onlyGovernance {
     require(__probability <= 100, 'Probability must be between 0 and 100');
     _antDeathProbability = __probability;
     emit AntLayingDeathProbabilityChanged(__probability);

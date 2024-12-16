@@ -8,5 +8,5 @@ interface IGovernance {
 
   function changeEggPrice(uint256 newPrice) external;
   function changeEggLayingCooldown(uint256 newCooldown) external;
-  function setAntDeathProbability(uint256 probability) external;
+  function setAntDeathProbability(uint8 probability) external;
 }
