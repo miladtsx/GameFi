@@ -273,7 +273,7 @@ contract UnitTest is Test, TestUtils {
     uint8 _firstAntId = 1;
     _cryptoAnts.layEgg(_firstAntId);
 
-    vm.expectRevert('You must wait before laying another egg');
+    vm.expectRevert('cooldowning...');
     _cryptoAnts.layEgg(_firstAntId);
     vm.stopPrank();
   }

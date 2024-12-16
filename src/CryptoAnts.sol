@@ -8,23 +8,23 @@ import {ERC721} from '@openzeppelin/token/ERC721/ERC721.sol';
 import 'forge-std/console.sol';
 
 contract CryptoAnts is ERC721, Governance, ICryptoAnts {
-  bool public _locked = false;
-  mapping(uint256 => address) public _antToOwner;
+  bool public locked = false;
+  mapping(uint256 => address) public antToOwner;
   IEgg public immutable EGGS;
-  uint256 public _antsCreated = 0;
+  uint256 public antsCreated = 0;
 
-  mapping(uint256 => uint256) public _lastEggLayingTime;
+  mapping(uint256 => uint256) public lastEggLayingTime;
 
   modifier lock() {
     //solhint-disable-next-line
-    require(_locked == false, 'Sorry, you are not allowed to re-enter here :)');
-    _locked = true;
+    require(locked == false, 'Sorry, you are not allowed to re-enter here :)');
+    locked = true;
     _;
-    _locked = false;
+    locked = false;
   }
 
   modifier onlyAntOwner(uint256 __antId) {
-    require(_antToOwner[__antId] == msg.sender, 'Unauthorized');
+    require(antToOwner[__antId] == msg.sender, 'Unauthorized');
     _;
   }
 
@@ -53,17 +53,15 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts {
 
   function createAnt() external payable {
     if (EGGS.balanceOf(msg.sender) < 1) revert NoEggs();
-    uint256 _antId = ++_antsCreated;
+    uint256 _antId = ++antsCreated;
     EGGS.burn(msg.sender, 1);
     _mint(msg.sender, _antId);
-    _antToOwner[_antId] = msg.sender;
+    antToOwner[_antId] = msg.sender;
     emit AntCreated(_antId);
   }
 
   function layEgg(uint256 __antId) external onlyAntOwner(__antId) {
-    require(
-      block.timestamp >= _lastEggLayingTime[__antId] + EGG_LAYING_COOLDOWN, 'You must wait before laying another egg'
-    );
+    require(block.timestamp >= lastEggLayingTime[__antId] + EGG_LAYING_COOLDOWN, 'cooldowning...');
 
     // randomness factor
     uint256 __randomness = uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender, __antId)));
@@ -73,7 +71,7 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts {
       _killAnt(__antId);
       emit AntDied(msg.sender, __antId);
     } else {
-      _lastEggLayingTime[__antId] = block.timestamp;
+      lastEggLayingTime[__antId] = block.timestamp;
 
       uint256 __numberOfEggsToMint = __randomness % 21; // [0, 20]
 
@@ -95,11 +93,11 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts {
   }
 
   function getAntsCreated() external view returns (uint256) {
-    return _antsCreated;
+    return antsCreated;
   }
 
   function _killAnt(uint256 __antId) private {
-    delete _antToOwner[__antId];
+    delete antToOwner[__antId];
     _burn(__antId);
   }
 }

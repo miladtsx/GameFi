@@ -100,7 +100,7 @@ contract IntegrationTest is Test, TestUtils {
 
     vm.warp(block.timestamp + 9 minutes);
 
-    vm.expectRevert('You must wait before laying another egg');
+    vm.expectRevert('cooldowning...');
     _cryptoAnts.layEgg(_firstAntId);
 
     vm.warp(block.timestamp + 1 minutes);
@@ -132,7 +132,7 @@ contract IntegrationTest is Test, TestUtils {
 
       uint8 _amountOflayedEggs = uint8(__postLayEggBalance - __preLayEggBalance);
 
-      require(_amountOflayedEggs >= 0 && _amountOflayedEggs <= 20, 'Number of laid eggs must be between 0 and 20');
+      require(0 <= _amountOflayedEggs && _amountOflayedEggs <= 20, 'Invalid egg count');
     }
     vm.stopPrank();
   }
@@ -157,11 +157,11 @@ contract IntegrationTest is Test, TestUtils {
       _cryptoAnts.layEgg(_antId);
 
       //Checking if the ant has died
-      if (_cryptoAnts._antToOwner(_antId) == address(0)) {
-        assertEq(_cryptoAnts._antToOwner(_antId), address(0), 'Ant should have died');
+      if (_cryptoAnts.antToOwner(_antId) == address(0)) {
+        assertEq(_cryptoAnts.antToOwner(_antId), address(0), 'Ant should have died');
         break; // Exit the loop if the Ant is dead
       } else {
-        assertEq(_cryptoAnts._antToOwner(_antId), _randomAddress, 'Ant should be alive');
+        assertEq(_cryptoAnts.antToOwner(_antId), _randomAddress, 'Ant should be alive');
       }
     }
     vm.stopPrank();
