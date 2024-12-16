@@ -91,9 +91,14 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts {
   function getContractBalance() external view returns (uint256) {
     return address(this).balance;
   }
+  /**
+   * @dev Check if the Ant is alive.
+   * @param __antId The ID of the Ant to check.
+   * @return A boolean indicating if the Ant is alive.
+   */
 
-  function getAntsCreated() external view returns (uint256) {
-    return antsCreated;
+  function isAntAlive(uint256 __antId) external view returns (bool) {
+    return antToOwner[__antId] != address(0);
   }
 
   function _killAnt(uint256 __antId) private {

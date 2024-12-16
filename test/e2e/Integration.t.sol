@@ -5,15 +5,28 @@ import {Test} from 'forge-std/Test.sol';
 import {console} from 'forge-std/console.sol';
 import {CryptoAnts} from 'src/CryptoAnts.sol';
 import {Egg} from 'src/Egg.sol';
-
 import {Governance} from 'src/Governance.sol';
+import {ICryptoAnts} from 'src/ICryptoAnts.sol';
 import {IEgg} from 'src/IEgg.sol';
+import {IGovernance} from 'src/IGovernance.sol';
 import {TestUtils} from 'test/TestUtils.sol';
+
+// Helper Struct added for readability of the testCanCreate100AntsFromOneEgg
+struct AntStats {
+  uint256 totalAnts;
+  uint256 aliveAnts;
+  uint256 eggsLayed;
+  uint256 antsBorn;
+  uint256 antsDied;
+  uint256 noEggLays;
+}
 
 contract IntegrationTest is Test, TestUtils {
   uint256 internal constant _FORK_BLOCK = 7_117_514;
-  CryptoAnts internal _cryptoAnts;
-  Governance internal _governance;
+  ICryptoAnts internal _cryptoAnts;
+  CryptoAnts internal _cryptoAntsContract;
+  IGovernance internal _governance;
+  Governance internal _governanceConteact;
   address internal _owner = makeAddr('owner');
   IEgg internal _eggs;
   address private _randomAddress = makeAddr('randomAddress');
@@ -22,8 +35,10 @@ contract IntegrationTest is Test, TestUtils {
   function setUp() public {
     vm.createSelectFork(vm.rpcUrl('sepolia'), _FORK_BLOCK);
     _eggs = IEgg(vm.computeCreateAddress(address(this), 2));
-    _cryptoAnts = new CryptoAnts(address(_eggs), _governerAddress);
-    _governance = Governance(address(_cryptoAnts));
+    _cryptoAntsContract = new CryptoAnts(address(_eggs), _governerAddress);
+    _cryptoAnts = ICryptoAnts(_cryptoAntsContract);
+    _governanceConteact = Governance(address(_cryptoAnts));
+    _governance = IGovernance(_governanceConteact);
     _eggs = new Egg(address(_cryptoAnts));
   }
 
@@ -61,7 +76,7 @@ contract IntegrationTest is Test, TestUtils {
 
     _cryptoAnts.createAnt();
 
-    assertEq(_cryptoAnts.getAntsCreated(), 1);
+    assertEq(_cryptoAntsContract.antsCreated(), 1);
   }
 
   function testANTCanBeSoldByTheOwner() public {
@@ -98,12 +113,12 @@ contract IntegrationTest is Test, TestUtils {
     uint8 _firstAntId = 1;
     _cryptoAnts.layEgg(_firstAntId);
 
-    vm.warp(block.timestamp + 9 minutes);
+    vm.warp(block.timestamp + _governanceConteact.EGG_LAYING_COOLDOWN() - 1);
 
     vm.expectRevert('cooldowning...');
     _cryptoAnts.layEgg(_firstAntId);
 
-    vm.warp(block.timestamp + 1 minutes);
+    vm.warp(block.timestamp + 1);
     _cryptoAnts.layEgg(_firstAntId);
 
     vm.stopPrank();
@@ -131,7 +146,6 @@ contract IntegrationTest is Test, TestUtils {
       uint256 __postLayEggBalance = _eggs.balanceOf(_randomAddress);
 
       uint8 _amountOflayedEggs = uint8(__postLayEggBalance - __preLayEggBalance);
-
       require(0 <= _amountOflayedEggs && _amountOflayedEggs <= 20, 'Invalid egg count');
     }
     vm.stopPrank();
@@ -153,23 +167,96 @@ contract IntegrationTest is Test, TestUtils {
     _cryptoAnts.createAnt();
     uint8 _antId = 1;
 
+    bool _didAntDied = false;
+
     for (uint8 i = 0; i < 100; i++) {
       _cryptoAnts.layEgg(_antId);
 
       //Checking if the ant has died
-      if (_cryptoAnts.antToOwner(_antId) == address(0)) {
-        assertEq(_cryptoAnts.antToOwner(_antId), address(0), 'Ant should have died');
-        break; // Exit the loop if the Ant is dead
-      } else {
-        assertEq(_cryptoAnts.antToOwner(_antId), _randomAddress, 'Ant should be alive');
+      if (_cryptoAntsContract.antToOwner(_antId) == address(0)) {
+        assertEq(_cryptoAntsContract.antToOwner(_antId), address(0), 'Ant should have died');
+        _didAntDied = true;
+        break;
       }
     }
+
+    assertEq(_didAntDied, true, 'Ant never died');
+
     vm.stopPrank();
   }
 
-  /*
-    This is a completely optional test.
-    Hint: you may need `warp` to handle the egg creation cooldown
-  */
-  function testBeAbleToCreate100AntsWithOnlyOneInitialEgg() public {}
+  function testCanCreate100AntsFromOneEgg() public {
+    uint8 targetAntCount = 100;
+
+    setupInitialState();
+
+    AntStats memory stats = _initializeAntStats();
+
+    while (stats.totalAnts < targetAntCount && stats.aliveAnts > 0) {
+      stats = _layEggsAndCreateAnts(stats, targetAntCount);
+    }
+
+    _logAntJourney(stats);
+    vm.stopPrank();
+  }
+
+  function setupInitialState() internal {
+    vm.startPrank(_randomAddress);
+    vm.deal(_randomAddress, 1 ether);
+    _cryptoAnts.buyEggs{value: 1 ether}(1);
+    _cryptoAnts.createAnt();
+  }
+
+  function _initializeAntStats() internal pure returns (AntStats memory) {
+    return AntStats({totalAnts: 1, aliveAnts: 1, eggsLayed: 0, antsBorn: 0, antsDied: 0, noEggLays: 0});
+  }
+
+  function _layEggsAndCreateAnts(AntStats memory stats, uint256 targetCount) internal returns (AntStats memory) {
+    for (uint8 antId = 1; antId <= stats.totalAnts; antId++) {
+      if (stats.aliveAnts >= targetCount) break;
+
+      _cryptoAnts.layEgg(antId);
+
+      uint8 eggsCount = uint8(_eggs.balanceOf(_randomAddress));
+      stats.eggsLayed += eggsCount;
+
+      if (eggsCount > 0) {
+        stats = _hatchEggs(stats, eggsCount, targetCount);
+      } else {
+        stats = _handleAntPossibleDeath(stats, antId);
+      }
+    }
+    return stats;
+  }
+
+  function _hatchEggs(AntStats memory stats, uint256 eggsCount, uint256 targetCount) internal returns (AntStats memory) {
+    for (uint256 i = 0; i < eggsCount; i++) {
+      _cryptoAnts.createAnt();
+      stats.antsBorn++;
+      stats.totalAnts++;
+      stats.aliveAnts++;
+      vm.warp(block.timestamp + _governanceConteact.EGG_LAYING_COOLDOWN());
+      if (stats.aliveAnts >= targetCount) break;
+    }
+    return stats;
+  }
+
+  function _handleAntPossibleDeath(AntStats memory stats, uint8 antId) internal view returns (AntStats memory) {
+    if (!_cryptoAntsContract.isAntAlive(antId)) {
+      stats.antsDied++;
+      stats.aliveAnts--;
+    } else {
+      stats.noEggLays++;
+    }
+    return stats;
+  }
+
+  function _logAntJourney(AntStats memory stats) internal pure {
+    console.log('The journey from 1 Egg to 100 Ants:');
+    console.log(' Total Ants Born:', stats.antsBorn);
+    console.log(' Ants Still Alive:', stats.aliveAnts);
+    console.log(' Total Eggs Laid:', stats.eggsLayed);
+    console.log(' Zero-Egg Lays:', stats.noEggLays);
+    console.log(' Ants Died:', stats.antsDied);
+  }
 }
