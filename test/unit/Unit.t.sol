@@ -28,13 +28,14 @@ contract UnitTest is Test, TestUtils {
     _eggs = new Egg(address(_cryptoAnts));
   }
 
-  function testEggIsNotDivisable() public view {
-    assertEq(_eggs.decimals(), 0);
-  }
-
   function testOnlyAntCanBurnEgg() public {
     vm.expectRevert('Only CryptoAnts can burn eggs');
     _eggs.burn(_randomAddress, 1);
+  }
+
+  function testAntDeploymentChecksGovernorAddress() public {
+    vm.expectRevert('No Governor set!');
+    new CryptoAnts(address(_eggs), address(0));
   }
 
   function testEggDeploymentIsCryptoAntsDeployed() public {
@@ -259,6 +260,10 @@ contract UnitTest is Test, TestUtils {
     vm.expectEmit(true, false, false, false);
     emit ICryptoAnts.EggsLayed(_randomAddress, 0);
     _cryptoAnts.layEgg(_firstAntId);
+
+    uint256 _amountOflayedEggs = _eggs.balanceOf(_randomAddress);
+    require(0 <= _amountOflayedEggs && _amountOflayedEggs <= 20, 'Invalid egg count');
+
     vm.stopPrank();
   }
 
@@ -328,5 +333,21 @@ contract UnitTest is Test, TestUtils {
     vm.expectEmit(false, false, false, true);
     emit IGovernance.EggPriceChanged(1 ether);
     _governance.changeEggPrice(1 ether);
+  }
+
+  function testIsAntAlive() public {
+    vm.startPrank(_randomAddress);
+
+    assertEq(_cryptoAnts.isAntAlive(1), false);
+    deal(_randomAddress, 1 ether);
+
+    _cryptoAnts.buyEggs{value: 1 ether}(1);
+    assertEq(_cryptoAnts.isAntAlive(1), false);
+
+    vm.stopPrank();
+  }
+
+  function testEggIsNotDivisable() public view {
+    assertEq(_eggs.decimals(), 0);
   }
 }
