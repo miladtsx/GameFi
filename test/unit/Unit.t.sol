@@ -6,6 +6,7 @@ import {Test} from 'forge-std/Test.sol';
 import {console} from 'forge-std/console.sol';
 import {CryptoAnts} from 'src/CryptoAnts.sol';
 import {Egg} from 'src/Egg.sol';
+import {Governance} from 'src/Governance.sol';
 import {ICryptoAnts} from 'src/ICryptoAnts.sol';
 import {IEgg} from 'src/IEgg.sol';
 import {IGovernance} from 'src/IGovernance.sol';
@@ -15,6 +16,7 @@ contract UnitTest is Test, TestUtils {
   uint256 internal constant _FORK_BLOCK = 7_117_514;
   ICryptoAnts internal _cryptoAnts;
   IGovernance internal _governance;
+  Governance internal _governanceContract;
   address internal _owner = makeAddr('owner');
   IEgg internal _eggs;
   address private _randomAddress = makeAddr('randomAddress');
@@ -24,7 +26,8 @@ contract UnitTest is Test, TestUtils {
     vm.createSelectFork(vm.rpcUrl('sepolia'), _FORK_BLOCK);
     _eggs = IEgg(vm.computeCreateAddress(address(this), 2));
     _cryptoAnts = new CryptoAnts(address(_eggs), _governorAddress);
-    _governance = IGovernance(address(_cryptoAnts));
+    _governanceContract = Governance(address(_cryptoAnts));
+    _governance = IGovernance(_governanceContract);
     _eggs = new Egg(address(_cryptoAnts));
   }
 
@@ -184,9 +187,10 @@ contract UnitTest is Test, TestUtils {
   }
 
   function testANTCanBeSoldForLessETHThanTheEGGPrice() public {
-    deal(_randomAddress, 1 ether);
+    uint256 initialBalance = 1 ether;
+    deal(_randomAddress, initialBalance);
     vm.startPrank(_randomAddress);
-    _cryptoAnts.buyEggs{value: 1 ether}(1);
+    _cryptoAnts.buyEggs{value: initialBalance}(1);
     uint8 expectedAntId = 1;
 
     _cryptoAnts.createAnt();
@@ -197,8 +201,7 @@ contract UnitTest is Test, TestUtils {
 
     uint256 afterSellBalance = _randomAddress.balance;
 
-    // 0.004 * 1e18 = 4000000000000000
-    assertEq(afterSellBalance, beforeSellBalance + 4_000_000_000_000_000);
+    assertEq(afterSellBalance, beforeSellBalance + _governanceContract.antPrice());
 
     vm.stopPrank();
   }
@@ -240,6 +243,13 @@ contract UnitTest is Test, TestUtils {
     vm.expectEmit(false, false, false, true);
     emit IGovernance.EggPriceChanged(1 ether);
     _governance.setEggPrice(1 ether);
+  }
+
+  function testsetAntPriceEmits() public {
+    vm.prank(_governorAddress);
+    vm.expectEmit(false, false, false, true);
+    emit IGovernance.AntPriceChanged(0.004 ether);
+    _governance.setAntPrice(0.004 ether);
   }
 
   function testsetEggLayingCooldownEmits() public {
@@ -326,6 +336,8 @@ contract UnitTest is Test, TestUtils {
   function testGovernanceAccessControl() public {
     vm.expectRevert('Unauthorized: Only governor');
     _governance.setEggPrice(1 ether);
+    vm.expectRevert('Unauthorized: Only governor');
+    _governance.setAntPrice(0.004 ether);
     vm.expectRevert('Unauthorized: Only governor');
     _governance.setEggLayingCooldown(1 seconds);
     vm.expectRevert('Unauthorized: Only governor');

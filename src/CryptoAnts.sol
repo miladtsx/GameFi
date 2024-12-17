@@ -75,7 +75,7 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
   function sellAnt(uint256 antId) external onlyAntOwner(antId) nonReentrant {
     _killAnt(antId);
     // solhint-disable-next-line
-    payable(msg.sender).transfer(0.004 ether);
+    payable(msg.sender).transfer(antPrice);
     emit AntSold(msg.sender, antId);
   }
 

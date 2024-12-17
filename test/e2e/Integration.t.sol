@@ -26,7 +26,7 @@ contract IntegrationTest is Test, TestUtils {
   ICryptoAnts internal _cryptoAnts;
   CryptoAnts internal _cryptoAntsContract;
   IGovernance internal _governance;
-  Governance internal _governanceConteact;
+  Governance internal _governanceContract;
   address internal _owner = makeAddr('owner');
   IEgg internal _eggs;
   address private _randomAddress = makeAddr('randomAddress');
@@ -37,8 +37,8 @@ contract IntegrationTest is Test, TestUtils {
     _eggs = IEgg(vm.computeCreateAddress(address(this), 2));
     _cryptoAntsContract = new CryptoAnts(address(_eggs), _governorAddress);
     _cryptoAnts = ICryptoAnts(_cryptoAntsContract);
-    _governanceConteact = Governance(address(_cryptoAnts));
-    _governance = IGovernance(_governanceConteact);
+    _governanceContract = Governance(address(_cryptoAnts));
+    _governance = IGovernance(_governanceContract);
     _eggs = new Egg(address(_cryptoAnts));
   }
 
@@ -100,6 +100,28 @@ contract IntegrationTest is Test, TestUtils {
     assertEq(_eggs.balanceOf(_randomAddress), 1);
   }
 
+  function testGovernancesetAntPrice() public {
+    uint8 expectedAntId = 1;
+    uint8 countOfEggToBuy = 1;
+
+    vm.prank(_governorAddress);
+    _governance.setEggPrice(1 ether);
+    vm.prank(_governorAddress);
+    _governance.setAntPrice(1 ether);
+
+    vm.startPrank(_randomAddress);
+    deal(_randomAddress, 1 ether);
+    _cryptoAnts.buyEggs{value: 1 ether}(countOfEggToBuy);
+    assertEq(_randomAddress.balance, 1 ether - _governanceContract.eggPrice());
+    assertEq(_eggs.balanceOf(_randomAddress), countOfEggToBuy);
+    _cryptoAnts.createAnt();
+
+    _cryptoAnts.sellAnt(expectedAntId);
+
+    assertEq(_randomAddress.balance, 1 ether);
+    vm.stopPrank();
+  }
+
   function testAntsShouldBeAbleToCreateLayEggsOnceEvery10Minutes() public {
     vm.startPrank(_randomAddress);
 
@@ -113,7 +135,7 @@ contract IntegrationTest is Test, TestUtils {
     uint8 firstAntId = 1;
     _cryptoAnts.layEgg(firstAntId);
 
-    vm.warp(block.timestamp + _governanceConteact.EGG_LAYING_COOLDOWN() - 1);
+    vm.warp(block.timestamp + _governanceContract.EGG_LAYING_COOLDOWN() - 1);
 
     vm.expectRevert('cooldowning...');
     _cryptoAnts.layEgg(firstAntId);
@@ -231,7 +253,7 @@ contract IntegrationTest is Test, TestUtils {
       stats.antsBorn++;
       stats.totalAnts++;
       stats.aliveAnts++;
-      vm.warp(block.timestamp + _governanceConteact.EGG_LAYING_COOLDOWN());
+      vm.warp(block.timestamp + _governanceContract.EGG_LAYING_COOLDOWN());
       if (stats.aliveAnts >= targetCount) break;
     }
     return stats;

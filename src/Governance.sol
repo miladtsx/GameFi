@@ -5,6 +5,7 @@ import {IGovernance} from './IGovernance.sol';
 
 contract Governance is IGovernance {
   uint256 public eggPrice = 0.01 ether;
+  uint256 public antPrice = 0.004 ether;
   uint256 public EGG_LAYING_COOLDOWN = 10 minutes;
   address public immutable GOVERNOR;
   uint8 public antDeathProbability = 1; // 1% chance of Ant dying when laying Egg.
@@ -26,6 +27,11 @@ contract Governance is IGovernance {
   function setEggPrice(uint256 newPrice) external override onlyGovernance {
     eggPrice = newPrice;
     emit EggPriceChanged(newPrice);
+  }
+
+  function setAntPrice(uint256 newPrice) external override onlyGovernance {
+    antPrice = newPrice;
+    emit AntPriceChanged(newPrice);
   }
 
   function setEggLayingCooldown(uint256 newCooldown) external override onlyGovernance {
