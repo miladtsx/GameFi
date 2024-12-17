@@ -5,22 +5,14 @@ import {Governance} from './Governance.sol';
 import {ICryptoAnts} from './ICryptoAnts.sol';
 import {IEgg} from './IEgg.sol';
 import {ERC721} from '@openzeppelin/token/ERC721/ERC721.sol';
+import {ReentrancyGuard} from '@openzeppelin/utils/ReentrancyGuard.sol';
 import 'forge-std/console.sol';
 
-contract CryptoAnts is ERC721, Governance, ICryptoAnts {
-  bool public locked = false;
+contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
   mapping(uint256 => address) public antToOwner;
   IEgg public immutable EGGS;
   uint256 public antsCreated = 0;
   mapping(uint256 => uint256) public lastEggLayingTime;
-
-  modifier lock() {
-    //solhint-disable-next-line
-    require(locked == false, 'Sorry, you are not allowed to re-enter here :)');
-    locked = true;
-    _;
-    locked = false;
-  }
 
   modifier onlyAntOwner(uint256 antId) {
     require(antToOwner[antId] == msg.sender, 'Unauthorized');
@@ -29,12 +21,12 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts {
 
   constructor(
     address eggErc20,
-    address governor
-  ) ERC721('Crypto Ants', 'ANTS') Governance(governor) noZeroAddress(eggErc20) noZeroAddress(governor) {
+    address governorAddress
+  ) ERC721('Crypto Ants', 'ANTS') Governance(governorAddress) noZeroAddress(eggErc20) noZeroAddress(governorAddress) {
     EGGS = IEgg(eggErc20);
   }
 
-  function buyEggs(uint256 amount) external payable override lock {
+  function buyEggs(uint256 amount) external payable override nonReentrant {
     require(amount > 0, 'Amount must be greater than zero');
 
     uint256 totalCost = amount * eggPrice;
@@ -44,8 +36,7 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts {
     uint256 extraETH = msg.value - totalCost;
 
     if (extraETH > 0) {
-      (bool success,) = msg.sender.call{value: extraETH}('');
-      require(success, 'Failed to return extra ETH');
+      payable(msg.sender).transfer(extraETH);
     }
 
     EGGS.mint(msg.sender, amount);
@@ -81,11 +72,10 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts {
     }
   }
 
-  function sellAnt(uint256 antId) external onlyAntOwner(antId) lock {
+  function sellAnt(uint256 antId) external onlyAntOwner(antId) nonReentrant {
     _killAnt(antId);
     // solhint-disable-next-line
-    (bool success,) = msg.sender.call{value: 0.004 ether}('');
-    require(success, 'Whoops, this call failed!');
+    payable(msg.sender).transfer(0.004 ether);
     emit AntSold(msg.sender, antId);
   }
 
