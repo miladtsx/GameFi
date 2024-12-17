@@ -13,6 +13,9 @@ interface ICryptoAnts is IERC721 {
   error NoEggs();
   error NoEnoughEggs();
   error WrongEtherSent();
+  error CoolingDown();
+  error NoZeroAmount();
+  error AntUnAuthorizedAccess();
 
   function buyEggs(uint256 amount) external payable;
   function createAnt() external payable;

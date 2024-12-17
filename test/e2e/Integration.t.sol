@@ -159,7 +159,7 @@ contract IntegrationTest is Test, TestUtils {
 
     vm.warp(block.timestamp + _governanceContract.EGG_LAYING_COOLDOWN() - 1);
 
-    vm.expectRevert('cooldowning...');
+    vm.expectRevert(ICryptoAnts.CoolingDown.selector);
     _cryptoAnts.layEgg(firstAntId);
 
     vm.warp(block.timestamp + 1);
@@ -232,7 +232,7 @@ contract IntegrationTest is Test, TestUtils {
   function testCanCreate100AntsFromOneEgg() public {
     uint8 targetAntCount = 100;
 
-    setupInitialState();
+    _setupInitialState();
 
     AntStats memory stats = _initializeAntStats();
 
@@ -244,7 +244,7 @@ contract IntegrationTest is Test, TestUtils {
     vm.stopPrank();
   }
 
-  function setupInitialState() internal {
+  function _setupInitialState() internal {
     vm.startPrank(_randomAddress);
     vm.deal(_randomAddress, 1 ether);
     _cryptoAnts.buyEggs{value: 1 ether}(1);

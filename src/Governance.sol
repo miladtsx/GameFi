@@ -11,12 +11,12 @@ contract Governance is IGovernance {
   uint8 public antDeathProbability = 1; // 1% chance of Ant dying when laying Egg.
 
   modifier onlyGovernance() {
-    require(msg.sender == GOVERNOR, 'Unauthorized: Only governor');
+    if (msg.sender != GOVERNOR) revert GovUnAuthorizedAccess();
     _;
   }
 
   modifier noZeroAddress(address addr) {
-    require(addr != address(0), 'Address cannot be zero');
+    if (addr == address(0)) revert ZeroAddressError();
     _;
   }
 
@@ -44,7 +44,7 @@ contract Governance is IGovernance {
    * @param probability The probability percentage (0-100).
    */
   function setAntDeathProbability(uint8 probability) external onlyGovernance {
-    require(probability <= 100, 'Probability must be between 0 and 100');
+    if (probability > 100) revert ValidInput0UpTo100();
     antDeathProbability = probability;
     emit AntLayingDeathProbabilityChanged(probability);
   }

@@ -6,22 +6,22 @@ import {ERC20} from '@openzeppelin/token/ERC20/ERC20.sol';
 import 'forge-std/console.sol';
 
 contract Egg is ERC20, IEgg {
-  address private immutable _ants;
+  address private immutable _antContractAddress;
 
   constructor(address ants) ERC20('EGG', 'EGG') {
-    require(address(ants).code.length > 0, 'Invalid Ants');
-    _ants = ants;
+    if (address(ants).code.length == 0) revert NoContractAccount();
+    _antContractAddress = ants;
   }
 
   function mint(address to, uint256 amount) external override {
     //solhint-disable-next-line
-    require(msg.sender == _ants, 'Only CryptoAnts can mint eggs');
+    if (msg.sender != _antContractAddress) revert OnlyAntCanLayEgg();
     _mint(to, amount);
   }
 
   function burn(address from, uint256 amount) external override {
     //solhint-disable-next-line
-    require(msg.sender == _ants, 'Only CryptoAnts can burn eggs');
+    if (msg.sender != _antContractAddress) revert EggUnAuthorizedAccess();
     _burn(from, amount);
   }
 

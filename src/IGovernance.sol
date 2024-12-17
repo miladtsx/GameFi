@@ -7,6 +7,10 @@ interface IGovernance {
   event EggLayingCooldownChanged(uint256 newCooldown);
   event AntLayingDeathProbabilityChanged(uint256 newProbability);
 
+  error GovUnAuthorizedAccess();
+  error ValidInput0UpTo100();
+  error ZeroAddressError();
+
   function setEggPrice(uint256 newPrice) external;
   function setAntPrice(uint256 newPrice) external;
   function setEggLayingCooldown(uint256 newCooldown) external;

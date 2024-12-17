@@ -16,7 +16,7 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
   mapping(uint256 => uint256) public lastEggLayingTime;
 
   modifier onlyAntOwner(uint256 antId) {
-    require(antToOwner[antId] == msg.sender, 'Unauthorized');
+    if (antToOwner[antId] != msg.sender) revert AntUnAuthorizedAccess();
     _;
   }
 
@@ -35,7 +35,7 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
   }
 
   function buyEggs(uint256 amount) external payable override nonReentrant {
-    require(amount > 0, 'Amount must be greater than zero');
+    if (amount < 1) revert NoZeroAmount();
 
     uint256 totalCost = amount * eggPrice;
 
@@ -66,7 +66,7 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
   }
 
   function layEgg(uint256 antId) external onlyAntOwner(antId) {
-    require(block.timestamp >= lastEggLayingTime[antId] + EGG_LAYING_COOLDOWN, 'cooldowning...');
+    if (block.timestamp < lastEggLayingTime[antId] + EGG_LAYING_COOLDOWN) revert CoolingDown();
 
     // randomness factor
     uint256 randomness = uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender, antId)));

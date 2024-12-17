@@ -35,19 +35,19 @@ contract UnitTest is Test, TestUtils {
   }
 
   function testOnlyAntCanBurnEgg() public {
-    vm.expectRevert('Only CryptoAnts can burn eggs');
+    vm.expectRevert(IEgg.EggUnAuthorizedAccess.selector);
     _eggs.burn(_randomAddress, 1);
   }
 
   function testAntDeploymentChecksGovernorAddress() public {
-    vm.expectRevert('Address cannot be zero');
+    vm.expectRevert(IGovernance.ZeroAddressError.selector);
     new CryptoAnts(address(_eggs), address(0));
-    vm.expectRevert('Address cannot be zero');
+    vm.expectRevert(IGovernance.ZeroAddressError.selector);
     new CryptoAnts(address(0), address(_governorAddress));
   }
 
   function testEggDeploymentIsCryptoAntsDeployed() public {
-    vm.expectRevert('Invalid Ants');
+    vm.expectRevert(IEgg.NoContractAccount.selector);
     new Egg(makeAddr('empty'));
     new Egg(address(_cryptoAnts));
   }
@@ -55,7 +55,7 @@ contract UnitTest is Test, TestUtils {
   function testOnlyCryptoAntCanMintEgg() public {
     vm.startPrank(_randomAddress);
 
-    vm.expectRevert('Only CryptoAnts can mint eggs');
+    vm.expectRevert(IEgg.OnlyAntCanLayEgg.selector);
     _eggs.mint(_randomAddress, 1);
 
     vm.deal(_randomAddress, 1 ether);
@@ -95,7 +95,7 @@ contract UnitTest is Test, TestUtils {
   function testBuyEggsValidateInput() public {
     uint8 invalidAmountOfEggsToBuy = 0;
     hoax(_randomAddress, 1 ether);
-    vm.expectRevert('Amount must be greater than zero');
+    vm.expectRevert(ICryptoAnts.NoZeroAmount.selector);
     _cryptoAnts.buyEggs{value: 1 ether}(invalidAmountOfEggsToBuy);
   }
 
@@ -205,7 +205,7 @@ contract UnitTest is Test, TestUtils {
     uint256 antId = _cryptoAntsContract.antsCreated();
     vm.stopPrank();
 
-    vm.expectRevert('Unauthorized');
+    vm.expectRevert(ICryptoAnts.AntUnAuthorizedAccess.selector);
     _cryptoAnts.sellAnt(antId);
 
     vm.startPrank(_randomAddress);
@@ -263,7 +263,7 @@ contract UnitTest is Test, TestUtils {
     emit IERC721.Transfer(_randomAddress, address(0), antId);
     _cryptoAnts.sellAnt(antId);
 
-    vm.expectRevert('Unauthorized');
+    vm.expectRevert(ICryptoAnts.AntUnAuthorizedAccess.selector);
     _cryptoAnts.sellAnt(antId);
 
     vm.stopPrank();
@@ -334,14 +334,14 @@ contract UnitTest is Test, TestUtils {
     uint256 firstAntId = _cryptoAntsContract.antsCreated();
     _cryptoAnts.layEgg(firstAntId);
 
-    vm.expectRevert('cooldowning...');
+    vm.expectRevert(ICryptoAnts.CoolingDown.selector);
     _cryptoAnts.layEgg(firstAntId);
     vm.stopPrank();
   }
 
   function testLayEggAntDeathProbabilityCorrectness() public {
     vm.prank(_governorAddress);
-    vm.expectRevert('Probability must be between 0 and 100');
+    vm.expectRevert(IGovernance.ValidInput0UpTo100.selector);
     _governance.setAntDeathProbability(101);
     vm.stopPrank();
   }
@@ -366,25 +366,25 @@ contract UnitTest is Test, TestUtils {
     assertEq(_eggs.balanceOf(_randomAddress), 0);
 
     // The Ant is dead! there is no Ant you own, so:
-    vm.expectRevert('Unauthorized');
+    vm.expectRevert(ICryptoAnts.AntUnAuthorizedAccess.selector);
     _cryptoAnts.layEgg(firstAntId);
     vm.stopPrank();
   }
 
   function testLayEggAccessControl() public {
     uint256 firstAntId = _cryptoAntsContract.antsCreated();
-    vm.expectRevert('Unauthorized');
+    vm.expectRevert(ICryptoAnts.AntUnAuthorizedAccess.selector);
     _cryptoAnts.layEgg(firstAntId);
   }
 
   function testGovernanceAccessControl() public {
-    vm.expectRevert('Unauthorized: Only governor');
+    vm.expectRevert(IGovernance.GovUnAuthorizedAccess.selector);
     _governance.setEggPrice(1 ether);
-    vm.expectRevert('Unauthorized: Only governor');
+    vm.expectRevert(IGovernance.GovUnAuthorizedAccess.selector);
     _governance.setAntPrice(0.004 ether);
-    vm.expectRevert('Unauthorized: Only governor');
+    vm.expectRevert(IGovernance.GovUnAuthorizedAccess.selector);
     _governance.setEggLayingCooldown(1 seconds);
-    vm.expectRevert('Unauthorized: Only governor');
+    vm.expectRevert(IGovernance.GovUnAuthorizedAccess.selector);
     _governance.setAntDeathProbability(1);
 
     vm.prank(_governorAddress);
