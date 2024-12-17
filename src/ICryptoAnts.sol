@@ -11,7 +11,6 @@ interface ICryptoAnts is IERC721 {
   event AntCreated(uint256 indexed antId);
 
   error NoEggs();
-  error NoZeroAddress();
   error WrongEtherSent();
 
   function buyEggs(uint256 amount) external payable;
