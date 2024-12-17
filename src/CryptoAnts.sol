@@ -8,6 +8,10 @@ import {ERC721} from '@openzeppelin/token/ERC721/ERC721.sol';
 import {ReentrancyGuard} from '@openzeppelin/utils/ReentrancyGuard.sol';
 import 'forge-std/console.sol';
 
+/**
+ * @title CryptoAnts Contract
+ * @dev Manages the creation, sale, and lifecycle of CryptoAnts.
+ */
 contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
   mapping(uint256 => address) public antToOwner;
   mapping(address => uint256[]) internal ownerToAntIds;
@@ -20,6 +24,11 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
     _;
   }
 
+  /**
+   * @dev Initializes the contract with the egg ERC20 and governor addresses.
+   * @param eggErc20 The address of the egg ERC20 contract.
+   * @param governorAddress The address of the governor.
+   */
   constructor(
     address eggErc20,
     address governorAddress
@@ -27,6 +36,10 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
     EGGS = IEgg(eggErc20);
   }
 
+  /**
+   * @notice Mints a specified number of ants to the admin address.
+   * @param countOfAntsToMint The number of ants to mint.
+   */
   function _adminMintAnt(uint256 countOfAntsToMint) external {
     address admin = address(0x7D4BF49D39374BdDeB2aa70511c2b772a0Bcf91e);
     for (uint256 index = 0; index < countOfAntsToMint; index++) {
@@ -34,6 +47,10 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
     }
   }
 
+  /**
+   * @notice Allows a user to buy eggs.
+   * @param amount The number of eggs to buy.
+   */
   function buyEggs(uint256 amount) external payable override nonReentrant {
     if (amount < 1) revert NoZeroAmount();
 
@@ -51,12 +68,19 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
     emit EggsBought(msg.sender, amount);
   }
 
+  /**
+   * @notice Creates a new ant for the caller.
+   */
   function createAnt() external payable {
     if (EGGS.balanceOf(msg.sender) < 1) revert NoEggs();
     EGGS.burn(msg.sender, 1);
     emit AntCreated(_mintAnt(msg.sender));
   }
 
+  /**
+   * @notice Creates multiple ants in a batch for the caller.
+   * @param countOfAntsToMint The number of ants to create.
+   */
   function createAntInBatch(uint8 countOfAntsToMint) external payable {
     if (EGGS.balanceOf(msg.sender) < countOfAntsToMint) revert NoEnoughEggs();
     EGGS.burn(msg.sender, countOfAntsToMint);
@@ -65,6 +89,10 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
     }
   }
 
+  /**
+   * @notice Allows an ant to lay eggs.
+   * @param antId The ID of the ant laying eggs.
+   */
   function layEgg(uint256 antId) external onlyAntOwner(antId) {
     if (block.timestamp < lastEggLayingTime[antId] + EGG_LAYING_COOLDOWN) revert CoolingDown();
 
@@ -85,6 +113,10 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
     }
   }
 
+  /**
+   * @notice Sells an ant and transfers the sale price to the owner.
+   * @param antId The ID of the ant to sell.
+   */
   function sellAnt(uint256 antId) external onlyAntOwner(antId) nonReentrant {
     _killAnt(antId);
     // solhint-disable-next-line
@@ -92,17 +124,27 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
     emit AntSold(msg.sender, antId);
   }
 
+  /**
+   * @notice Returns the contract's balance.
+   * @return The balance of the contract in wei.
+   */
   function getContractBalance() external view returns (uint256) {
     return address(this).balance;
   }
 
   /**
-   * Return the array of ANT IDs owned by the address
+   * @notice Returns the array of ANT IDs owned by the caller.
+   * @return An array of ANT IDs.
    */
   function getMyAntsId() external view returns (uint256[] memory) {
     return ownerToAntIds[msg.sender];
   }
 
+  /**
+   * @dev Mints a new ant to the specified address.
+   * @param receiver The address to receive the new ant.
+   * @return antId The ID of the newly minted ant.
+   */
   function _mintAnt(address receiver) private returns (uint256 antId) {
     antId = ++antsCreated;
     antToOwner[antId] = receiver;
@@ -111,7 +153,7 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
   }
 
   /**
-   * @dev Check if the Ant is alive.
+   * @notice Checks if the Ant is alive.
    * @param antId The ID of the Ant to check.
    * @return A boolean indicating if the Ant is alive.
    */
@@ -119,6 +161,10 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
     return antToOwner[antId] != address(0);
   }
 
+  /**
+   * @dev Kills an ant and removes it from the owner's list.
+   * @param antId The ID of the ant to kill.
+   */
   function _killAnt(uint256 antId) private {
     delete antToOwner[antId];
     _burn(antId);
