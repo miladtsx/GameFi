@@ -6,11 +6,11 @@ import {IGovernance} from './IGovernance.sol';
 contract Governance is IGovernance {
   uint256 public eggPrice = 0.01 ether;
   uint256 public EGG_LAYING_COOLDOWN = 10 minutes;
-  address public governor;
+  address public immutable GOVERNOR;
   uint8 public antDeathProbability = 1; // 1% chance of Ant dying when laying Egg.
 
   modifier onlyGovernance() {
-    require(msg.sender == governor, 'Unauthorized: Only governer');
+    require(msg.sender == GOVERNOR, 'Unauthorized: Only governor');
     _;
   }
 
@@ -20,7 +20,7 @@ contract Governance is IGovernance {
   }
 
   constructor(address initialGovernor) noZeroAddress(initialGovernor) {
-    governor = initialGovernor;
+    GOVERNOR = initialGovernor;
   }
 
   function setEggPrice(uint256 newPrice) external override onlyGovernance {

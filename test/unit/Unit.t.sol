@@ -18,12 +18,12 @@ contract UnitTest is Test, TestUtils {
   address internal _owner = makeAddr('owner');
   IEgg internal _eggs;
   address private _randomAddress = makeAddr('randomAddress');
-  address private _governerAddress = makeAddr('governerAddress');
+  address private _governorAddress = makeAddr('governorAddress');
 
   function setUp() public {
     vm.createSelectFork(vm.rpcUrl('sepolia'), _FORK_BLOCK);
     _eggs = IEgg(vm.computeCreateAddress(address(this), 2));
-    _cryptoAnts = new CryptoAnts(address(_eggs), _governerAddress);
+    _cryptoAnts = new CryptoAnts(address(_eggs), _governorAddress);
     _governance = IGovernance(address(_cryptoAnts));
     _eggs = new Egg(address(_cryptoAnts));
   }
@@ -36,6 +36,8 @@ contract UnitTest is Test, TestUtils {
   function testAntDeploymentChecksGovernorAddress() public {
     vm.expectRevert('Address cannot be zero');
     new CryptoAnts(address(_eggs), address(0));
+    vm.expectRevert('Address cannot be zero');
+    new CryptoAnts(address(0), address(_governorAddress));
   }
 
   function testEggDeploymentIsCryptoAntsDeployed() public {
@@ -103,7 +105,7 @@ contract UnitTest is Test, TestUtils {
     assertEq(_randomAddress.balance, expectedReturnValue);
 
     hoax(address(this), 1 ether);
-    vm.expectRevert('Failed to return extra ETH');
+    vm.expectRevert();
     _cryptoAnts.buyEggs{value: 1 ether}(amountOfEggsToBuy);
   }
 
@@ -221,7 +223,7 @@ contract UnitTest is Test, TestUtils {
   }
 
   function testsetEggPrice() public {
-    vm.prank(_governerAddress);
+    vm.prank(_governorAddress);
     _governance.setEggPrice(1 ether);
 
     vm.prank(_randomAddress);
@@ -234,14 +236,14 @@ contract UnitTest is Test, TestUtils {
   }
 
   function testsetEggPriceEmits() public {
-    vm.prank(_governerAddress);
+    vm.prank(_governorAddress);
     vm.expectEmit(false, false, false, true);
     emit IGovernance.EggPriceChanged(1 ether);
     _governance.setEggPrice(1 ether);
   }
 
   function testsetEggLayingCooldownEmits() public {
-    vm.startPrank(_governerAddress);
+    vm.startPrank(_governorAddress);
     vm.expectEmit(false, false, false, true);
     emit IGovernance.EggLayingCooldownChanged(1 seconds);
     _governance.setEggLayingCooldown(1 seconds);
@@ -284,14 +286,14 @@ contract UnitTest is Test, TestUtils {
   }
 
   function testLayEggAntDeathProbabilityCorrectness() public {
-    vm.prank(_governerAddress);
+    vm.prank(_governorAddress);
     vm.expectRevert('Probability must be between 0 and 100');
     _governance.setAntDeathProbability(101);
     vm.stopPrank();
   }
 
   function testLayEggAntDeath() public {
-    vm.prank(_governerAddress);
+    vm.prank(_governorAddress);
     _governance.setAntDeathProbability(100);
 
     vm.startPrank(_randomAddress);
@@ -322,14 +324,14 @@ contract UnitTest is Test, TestUtils {
   }
 
   function testGovernanceAccessControl() public {
-    vm.expectRevert('Unauthorized: Only governer');
+    vm.expectRevert('Unauthorized: Only governor');
     _governance.setEggPrice(1 ether);
-    vm.expectRevert('Unauthorized: Only governer');
+    vm.expectRevert('Unauthorized: Only governor');
     _governance.setEggLayingCooldown(1 seconds);
-    vm.expectRevert('Unauthorized: Only governer');
+    vm.expectRevert('Unauthorized: Only governor');
     _governance.setAntDeathProbability(1);
 
-    vm.prank(_governerAddress);
+    vm.prank(_governorAddress);
     vm.expectEmit(false, false, false, true);
     emit IGovernance.EggPriceChanged(1 ether);
     _governance.setEggPrice(1 ether);

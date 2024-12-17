@@ -30,12 +30,12 @@ contract IntegrationTest is Test, TestUtils {
   address internal _owner = makeAddr('owner');
   IEgg internal _eggs;
   address private _randomAddress = makeAddr('randomAddress');
-  address private _governerAddress = makeAddr('governerAddress');
+  address private _governorAddress = makeAddr('governorAddress');
 
   function setUp() public {
     vm.createSelectFork(vm.rpcUrl('sepolia'), _FORK_BLOCK);
     _eggs = IEgg(vm.computeCreateAddress(address(this), 2));
-    _cryptoAntsContract = new CryptoAnts(address(_eggs), _governerAddress);
+    _cryptoAntsContract = new CryptoAnts(address(_eggs), _governorAddress);
     _cryptoAnts = ICryptoAnts(_cryptoAntsContract);
     _governanceConteact = Governance(address(_cryptoAnts));
     _governance = IGovernance(_governanceConteact);
@@ -90,7 +90,7 @@ contract IntegrationTest is Test, TestUtils {
   }
 
   function testGovernancesetEggPrice() public {
-    vm.prank(_governerAddress);
+    vm.prank(_governorAddress);
     _governance.setEggPrice(1 ether);
 
     vm.prank(_randomAddress);
@@ -125,7 +125,7 @@ contract IntegrationTest is Test, TestUtils {
   }
 
   function testAntsShouldCreateRandomEggsRanging0To20() public {
-    vm.prank(_governerAddress);
+    vm.prank(_governorAddress);
     _governance.setEggLayingCooldown(0);
 
     vm.startPrank(_randomAddress);
@@ -156,7 +156,7 @@ contract IntegrationTest is Test, TestUtils {
    */
   function testAntsShouldDieRandomlyWhenLayingEggs() public {
     // Setting up the test environment
-    vm.startPrank(_governerAddress);
+    vm.startPrank(_governorAddress);
     _governance.setEggLayingCooldown(0); // Setting cooldown to 0 for testing purposes
     _governance.setAntDeathProbability(80); // Increase the chance of Ant laying death to 80%
     vm.stopPrank();
