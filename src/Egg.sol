@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity >=0.8.4 <0.9.0;
+pragma solidity 0.8.23;
 
 import {IEgg} from './IEgg.sol';
 import {ERC20} from '@openzeppelin/token/ERC20/ERC20.sol';

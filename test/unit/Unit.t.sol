@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.4 <0.9.0;
+pragma solidity 0.8.23;
 
 import {IERC721} from '@openzeppelin/token/ERC721/IERC721.sol';
 import {Test} from 'forge-std/Test.sol';
