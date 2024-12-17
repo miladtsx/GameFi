@@ -146,6 +146,28 @@ contract UnitTest is Test, TestUtils {
     vm.stopPrank();
   }
 
+  function testGetOwnedAntIdsAfterDelete() public {
+    vm.startPrank(_randomAddress);
+    deal(_randomAddress, 1 ether);
+    _cryptoAnts.buyEggs{value: 1 ether}(2);
+    _cryptoAnts.createAnt();
+    _cryptoAnts.createAnt();
+
+    uint256[] memory myAnts = _cryptoAnts.getMyAntsId();
+    assertEq(myAnts.length, 2);
+
+    uint256 firstAntId = myAnts[0];
+    uint256 secondAntId = myAnts[1];
+
+    _cryptoAnts.sellAnt(firstAntId);
+
+    uint256[] memory myAntsAfterDelete = _cryptoAnts.getMyAntsId();
+    assertEq(myAntsAfterDelete.length, 1);
+    assertEq(myAntsAfterDelete[0], secondAntId);
+
+    vm.stopPrank();
+  }
+
   function testCreateNewAntEmits() public {
     uint256 antId = _cryptoAntsContract.antsCreated() + 1;
     deal(_randomAddress, 1 ether);

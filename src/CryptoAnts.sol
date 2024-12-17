@@ -135,6 +135,7 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
   /**
    * @notice Returns the array of ANT IDs owned by the caller.
    * @return An array of ANT IDs.
+   * @notice because of the deletion method, the order of ants Id might change.
    */
   function getMyAntsId() external view returns (uint256[] memory) {
     return ownerToAntIds[msg.sender];
@@ -166,6 +167,26 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
    * @param antId The ID of the ant to kill.
    */
   function _killAnt(uint256 antId) private {
+    address owner = antToOwner[antId];
+
+    // Find the index of the antId in the owner's array
+    uint256[] storage antIds = ownerToAntIds[owner];
+    uint256 indexToRemove;
+    bool found = false;
+
+    for (uint256 i = 0; i < antIds.length; i++) {
+      if (antIds[i] == antId) {
+        indexToRemove = i;
+        found = true;
+        break;
+      }
+    }
+
+    // Move the last element to the index to remove
+    antIds[indexToRemove] = antIds[antIds.length - 1];
+    // Remove the last element
+    antIds.pop();
+
     delete antToOwner[antId];
     _burn(antId);
   }
