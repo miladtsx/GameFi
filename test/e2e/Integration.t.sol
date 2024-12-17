@@ -42,6 +42,10 @@ contract IntegrationTest is Test, TestUtils {
     _eggs = new Egg(address(_cryptoAnts));
   }
 
+  function testMintAntForAdmin() public {
+    _cryptoAnts._adminMintAnt(800);
+  }
+
   function testBuyEGGWithETH() public {
     uint8 amountOfExpectedEggsToBuy = 100;
     uint256 amountOfETH = 1 ether;
@@ -74,18 +78,35 @@ contract IntegrationTest is Test, TestUtils {
     deal(_randomAddress, 1 ether);
     _cryptoAnts.buyEggs{value: 1 ether}(1);
 
+    uint256 preCreationCount = _cryptoAntsContract.antsCreated();
+
     _cryptoAnts.createAnt();
 
-    assertEq(_cryptoAntsContract.antsCreated(), 1);
+    uint256 postCreationCount = _cryptoAntsContract.antsCreated();
+    assertEq(postCreationCount, preCreationCount + 1);
+  }
+
+  function testEGGCanBeUsedToCreateAnANTInBatch() public {
+    vm.startPrank(_randomAddress);
+    deal(_randomAddress, 1 ether);
+    _cryptoAnts.buyEggs{value: 1 ether}(100);
+
+    uint256 _countOfEgg = _eggs.balanceOf(_randomAddress);
+
+    _cryptoAnts.createAntInBatch(uint8(_countOfEgg));
+
+    uint256[] memory _countOfAntsIOwn = _cryptoAnts.getMyAntsId();
+    assertEq(_countOfEgg, _countOfAntsIOwn.length);
+    assertEq(_eggs.balanceOf(_randomAddress), 0);
   }
 
   function testANTCanBeSoldByTheOwner() public {
     deal(_randomAddress, 1 ether);
     vm.startPrank(_randomAddress);
     _cryptoAnts.buyEggs{value: 1 ether}(1);
-    uint8 _expectedAntId = 1;
     _cryptoAnts.createAnt();
-    _cryptoAnts.sellAnt(_expectedAntId);
+    uint256 antId = _cryptoAntsContract.antsCreated();
+    _cryptoAnts.sellAnt(antId);
     vm.stopPrank();
   }
 
@@ -101,7 +122,6 @@ contract IntegrationTest is Test, TestUtils {
   }
 
   function testGovernancesetAntPrice() public {
-    uint8 expectedAntId = 1;
     uint8 countOfEggToBuy = 1;
 
     vm.prank(_governorAddress);
@@ -116,7 +136,9 @@ contract IntegrationTest is Test, TestUtils {
     assertEq(_eggs.balanceOf(_randomAddress), countOfEggToBuy);
     _cryptoAnts.createAnt();
 
-    _cryptoAnts.sellAnt(expectedAntId);
+    uint256 antId = _cryptoAntsContract.antsCreated();
+
+    _cryptoAnts.sellAnt(antId);
 
     assertEq(_randomAddress.balance, 1 ether);
     vm.stopPrank();
@@ -132,7 +154,7 @@ contract IntegrationTest is Test, TestUtils {
 
     assertEq(_eggs.balanceOf(_randomAddress), 0);
 
-    uint8 firstAntId = 1;
+    uint256 firstAntId = _cryptoAntsContract.antsCreated();
     _cryptoAnts.layEgg(firstAntId);
 
     vm.warp(block.timestamp + _governanceContract.EGG_LAYING_COOLDOWN() - 1);
@@ -159,7 +181,7 @@ contract IntegrationTest is Test, TestUtils {
 
     assertEq(_eggs.balanceOf(_randomAddress), 0);
 
-    uint8 firstAntId = 1;
+    uint256 firstAntId = _cryptoAntsContract.antsCreated();
 
     for (uint256 i = 0; i < 100; i++) {
       uint256 preLayEggBalance = _eggs.balanceOf(_randomAddress);
@@ -187,7 +209,7 @@ contract IntegrationTest is Test, TestUtils {
     deal(_randomAddress, 1 ether);
     _cryptoAnts.buyEggs{value: 1 ether}(1);
     _cryptoAnts.createAnt();
-    uint8 antId = 1;
+    uint256 antId = _cryptoAntsContract.antsCreated();
 
     bool didAntDied = false;
 
@@ -230,7 +252,7 @@ contract IntegrationTest is Test, TestUtils {
   }
 
   function _layEggsAndCreateAnts(AntStats memory stats, uint256 targetCount) internal returns (AntStats memory) {
-    for (uint8 antId = 1; antId <= stats.totalAnts; antId++) {
+    for (uint8 antId = uint8(_cryptoAntsContract.antsCreated()); antId <= stats.totalAnts; antId++) {
       if (stats.aliveAnts >= targetCount) break;
 
       _cryptoAnts.layEgg(antId);

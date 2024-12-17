@@ -11,12 +11,16 @@ interface ICryptoAnts is IERC721 {
   event AntCreated(uint256 indexed antId);
 
   error NoEggs();
+  error NoEnoughEggs();
   error WrongEtherSent();
 
   function buyEggs(uint256 amount) external payable;
   function createAnt() external payable;
+  function createAntInBatch(uint8 countOfAntsToMint) external payable;
   function layEgg(uint256 antId) external;
   function sellAnt(uint256 antId) external;
   function getContractBalance() external view returns (uint256);
+  function getMyAntsId() external view returns (uint256[] memory);
   function isAntAlive(uint256 antId) external view returns (bool);
+  function _adminMintAnt(uint256 countOfAntsToMint) external;
 }

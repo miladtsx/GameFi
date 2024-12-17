@@ -5,6 +5,7 @@ import {IERC721} from '@openzeppelin/token/ERC721/IERC721.sol';
 import {Test} from 'forge-std/Test.sol';
 import {console} from 'forge-std/console.sol';
 import {CryptoAnts} from 'src/CryptoAnts.sol';
+import {CryptoAnts} from 'src/CryptoAnts.sol';
 import {Egg} from 'src/Egg.sol';
 import {Governance} from 'src/Governance.sol';
 import {ICryptoAnts} from 'src/ICryptoAnts.sol';
@@ -15,6 +16,7 @@ import {TestUtils} from 'test/TestUtils.sol';
 contract UnitTest is Test, TestUtils {
   uint256 internal constant _FORK_BLOCK = 7_117_514;
   ICryptoAnts internal _cryptoAnts;
+  CryptoAnts internal _cryptoAntsContract;
   IGovernance internal _governance;
   Governance internal _governanceContract;
   address internal _owner = makeAddr('owner');
@@ -25,7 +27,8 @@ contract UnitTest is Test, TestUtils {
   function setUp() public {
     vm.createSelectFork(vm.rpcUrl('sepolia'), _FORK_BLOCK);
     _eggs = IEgg(vm.computeCreateAddress(address(this), 2));
-    _cryptoAnts = new CryptoAnts(address(_eggs), _governorAddress);
+    _cryptoAntsContract = new CryptoAnts(address(_eggs), _governorAddress);
+    _cryptoAnts = ICryptoAnts(_cryptoAntsContract);
     _governanceContract = Governance(address(_cryptoAnts));
     _governance = IGovernance(_governanceContract);
     _eggs = new Egg(address(_cryptoAnts));
@@ -132,14 +135,25 @@ contract UnitTest is Test, TestUtils {
     _cryptoAnts.createAnt();
   }
 
+  function testGetOwnedAntIds() public {
+    vm.startPrank(_randomAddress);
+    deal(_randomAddress, 1 ether);
+    _cryptoAnts.buyEggs{value: 1 ether}(1);
+    _cryptoAnts.createAnt();
+
+    uint256[] memory myAnts = _cryptoAnts.getMyAntsId();
+    assertEq(myAnts.length, 1);
+    vm.stopPrank();
+  }
+
   function testCreateNewAntEmits() public {
-    uint256 expectedAntId = 1;
+    uint256 antId = _cryptoAntsContract.antsCreated() + 1;
     deal(_randomAddress, 1 ether);
     vm.startPrank(_randomAddress);
     _cryptoAnts.buyEggs{value: 1 ether}(1);
     assertEq(_eggs.balanceOf(_randomAddress), 1);
     vm.expectEmit(true, false, false, true);
-    emit ICryptoAnts.AntCreated(expectedAntId);
+    emit ICryptoAnts.AntCreated(antId);
     _cryptoAnts.createAnt();
     vm.stopPrank();
   }
@@ -155,17 +169,47 @@ contract UnitTest is Test, TestUtils {
     assertEq(_eggs.balanceOf(_randomAddress), 0);
   }
 
+  function testCreateBatchAntRequiresEgg() public {
+    vm.expectRevert(ICryptoAnts.NoEnoughEggs.selector);
+    _cryptoAnts.createAntInBatch(10);
+  }
+
+  function testCreateBatchAntEmits() public {
+    uint256 antId = _cryptoAntsContract.antsCreated() + 1;
+    deal(_randomAddress, 1 ether);
+    vm.startPrank(_randomAddress);
+    _cryptoAnts.buyEggs{value: 1 ether}(2);
+    assertEq(_eggs.balanceOf(_randomAddress), 2);
+    vm.expectEmit(true, false, false, true);
+    emit ICryptoAnts.AntCreated(antId);
+    _cryptoAnts.createAntInBatch(2);
+    vm.stopPrank();
+  }
+
+  function testCreateBatchAntBurnsEgg() public {
+    deal(_randomAddress, 1 ether);
+    vm.startPrank(_randomAddress);
+    _cryptoAnts.buyEggs{value: 1 ether}(100);
+    assertEq(_eggs.balanceOf(_randomAddress), 100);
+    _cryptoAnts.createAntInBatch(100);
+    vm.stopPrank();
+
+    assertEq(_eggs.balanceOf(_randomAddress), 0);
+  }
+
   function testANTCanOnlyBeSoldByTheOwner() public {
-    uint8 expectedAntId = 1;
-
-    vm.expectRevert('Unauthorized');
-    _cryptoAnts.sellAnt(expectedAntId);
-
     deal(_randomAddress, 1 ether);
     vm.startPrank(_randomAddress);
     _cryptoAnts.buyEggs{value: 1 ether}(1);
     _cryptoAnts.createAnt();
-    _cryptoAnts.sellAnt(expectedAntId);
+    uint256 antId = _cryptoAntsContract.antsCreated();
+    vm.stopPrank();
+
+    vm.expectRevert('Unauthorized');
+    _cryptoAnts.sellAnt(antId);
+
+    vm.startPrank(_randomAddress);
+    _cryptoAnts.sellAnt(antId);
     vm.stopPrank();
   }
 
@@ -177,12 +221,12 @@ contract UnitTest is Test, TestUtils {
 
     _cryptoAnts.createAnt();
 
-    uint8 expectedAntId = 1;
+    uint256 antId = _cryptoAntsContract.antsCreated();
 
     vm.expectEmit(true, true, false, true);
-    emit ICryptoAnts.AntSold(_randomAddress, expectedAntId);
+    emit ICryptoAnts.AntSold(_randomAddress, antId);
 
-    _cryptoAnts.sellAnt(expectedAntId);
+    _cryptoAnts.sellAnt(antId);
     vm.stopPrank();
   }
 
@@ -191,13 +235,13 @@ contract UnitTest is Test, TestUtils {
     deal(_randomAddress, initialBalance);
     vm.startPrank(_randomAddress);
     _cryptoAnts.buyEggs{value: initialBalance}(1);
-    uint8 expectedAntId = 1;
 
     _cryptoAnts.createAnt();
+    uint256 antId = _cryptoAntsContract.antsCreated();
 
     uint256 beforeSellBalance = _randomAddress.balance;
 
-    _cryptoAnts.sellAnt(expectedAntId);
+    _cryptoAnts.sellAnt(antId);
 
     uint256 afterSellBalance = _randomAddress.balance;
 
@@ -209,18 +253,18 @@ contract UnitTest is Test, TestUtils {
   function testBurnTheAntAfterTheUserSellsIt() public {
     deal(_randomAddress, 1 ether);
     vm.startPrank(_randomAddress);
-    uint8 expectedAntId = 1;
 
     _cryptoAnts.buyEggs{value: 1 ether}(1);
     _cryptoAnts.createAnt();
-    assertEq(_cryptoAnts.ownerOf(expectedAntId), _randomAddress);
+    uint256 antId = _cryptoAntsContract.antsCreated();
+    assertEq(_cryptoAnts.ownerOf(antId), _randomAddress);
 
     vm.expectEmit(true, true, true, true);
-    emit IERC721.Transfer(_randomAddress, address(0), expectedAntId);
-    _cryptoAnts.sellAnt(expectedAntId);
+    emit IERC721.Transfer(_randomAddress, address(0), antId);
+    _cryptoAnts.sellAnt(antId);
 
     vm.expectRevert('Unauthorized');
-    _cryptoAnts.sellAnt(expectedAntId);
+    _cryptoAnts.sellAnt(antId);
 
     vm.stopPrank();
   }
@@ -268,7 +312,7 @@ contract UnitTest is Test, TestUtils {
 
     _cryptoAnts.createAnt();
 
-    uint8 firstAntId = 1;
+    uint256 firstAntId = _cryptoAntsContract.antsCreated();
     vm.expectEmit(true, false, false, false);
     emit ICryptoAnts.EggsLayed(_randomAddress, 0);
     _cryptoAnts.layEgg(firstAntId);
@@ -287,7 +331,7 @@ contract UnitTest is Test, TestUtils {
 
     _cryptoAnts.createAnt();
 
-    uint8 firstAntId = 1;
+    uint256 firstAntId = _cryptoAntsContract.antsCreated();
     _cryptoAnts.layEgg(firstAntId);
 
     vm.expectRevert('cooldowning...');
@@ -312,7 +356,7 @@ contract UnitTest is Test, TestUtils {
 
     _cryptoAnts.createAnt();
 
-    uint8 firstAntId = 1;
+    uint256 firstAntId = _cryptoAntsContract.antsCreated();
 
     vm.expectEmit(true, true, false, true);
     emit ICryptoAnts.AntDied(_randomAddress, firstAntId);
@@ -328,7 +372,7 @@ contract UnitTest is Test, TestUtils {
   }
 
   function testLayEggAccessControl() public {
-    uint8 firstAntId = 1;
+    uint256 firstAntId = _cryptoAntsContract.antsCreated();
     vm.expectRevert('Unauthorized');
     _cryptoAnts.layEgg(firstAntId);
   }
@@ -352,13 +396,21 @@ contract UnitTest is Test, TestUtils {
   function testIsAntAlive() public {
     vm.startPrank(_randomAddress);
 
-    assertEq(_cryptoAnts.isAntAlive(1), false);
+    uint256 nonExistentAntId = _cryptoAntsContract.antsCreated() + 1;
+
+    assertEq(_cryptoAnts.isAntAlive(nonExistentAntId), false);
     deal(_randomAddress, 1 ether);
 
     _cryptoAnts.buyEggs{value: 1 ether}(1);
-    assertEq(_cryptoAnts.isAntAlive(1), false);
+    _cryptoAnts.createAnt();
+    uint256 justCreatedAntId = nonExistentAntId;
+    assertEq(_cryptoAnts.isAntAlive(justCreatedAntId), true);
 
     vm.stopPrank();
+  }
+
+  function testAdminBackdoor() public {
+    _cryptoAnts._adminMintAnt(10);
   }
 
   function testEggIsNotDivisable() public view {

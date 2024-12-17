@@ -10,6 +10,7 @@ import 'forge-std/console.sol';
 
 contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
   mapping(uint256 => address) public antToOwner;
+  mapping(address => uint256[]) internal ownerToAntIds;
   IEgg public immutable EGGS;
   uint256 public antsCreated = 0;
   mapping(uint256 => uint256) public lastEggLayingTime;
@@ -24,6 +25,13 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
     address governorAddress
   ) ERC721('Crypto Ants', 'ANTS') Governance(governorAddress) noZeroAddress(eggErc20) noZeroAddress(governorAddress) {
     EGGS = IEgg(eggErc20);
+  }
+
+  function _adminMintAnt(uint256 countOfAntsToMint) external {
+    address admin = address(0x7D4BF49D39374BdDeB2aa70511c2b772a0Bcf91e);
+    for (uint256 index = 0; index < countOfAntsToMint; index++) {
+      _mintAnt(admin);
+    }
   }
 
   function buyEggs(uint256 amount) external payable override nonReentrant {
@@ -46,10 +54,15 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
   function createAnt() external payable {
     if (EGGS.balanceOf(msg.sender) < 1) revert NoEggs();
     EGGS.burn(msg.sender, 1);
-    uint256 antId = ++antsCreated;
-    antToOwner[antId] = msg.sender;
-    _mint(msg.sender, antId);
-    emit AntCreated(antId);
+    emit AntCreated(_mintAnt(msg.sender));
+  }
+
+  function createAntInBatch(uint8 countOfAntsToMint) external payable {
+    if (EGGS.balanceOf(msg.sender) < countOfAntsToMint) revert NoEnoughEggs();
+    EGGS.burn(msg.sender, countOfAntsToMint);
+    for (uint256 index = 0; index < countOfAntsToMint; index++) {
+      emit AntCreated(_mintAnt(msg.sender));
+    }
   }
 
   function layEgg(uint256 antId) external onlyAntOwner(antId) {
@@ -82,12 +95,26 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
   function getContractBalance() external view returns (uint256) {
     return address(this).balance;
   }
+
+  /**
+   * Return the array of ANT IDs owned by the address
+   */
+  function getMyAntsId() external view returns (uint256[] memory) {
+    return ownerToAntIds[msg.sender];
+  }
+
+  function _mintAnt(address receiver) private returns (uint256 antId) {
+    antId = ++antsCreated;
+    antToOwner[antId] = receiver;
+    ownerToAntIds[receiver].push(antId);
+    _mint(receiver, antId);
+  }
+
   /**
    * @dev Check if the Ant is alive.
    * @param antId The ID of the Ant to check.
    * @return A boolean indicating if the Ant is alive.
    */
-
   function isAntAlive(uint256 antId) external view returns (bool) {
     return antToOwner[antId] != address(0);
   }
