@@ -9,6 +9,23 @@
 - [] Mint some Ants to `0x7D4BF49D39374BdDeB2aa70511c2b772a0Bcf91e` from the CryptoAnt constructor
 - [] Create a Pull Request
 
+## Known Low Security Issues
+### Smart Contracts (Slither)
+> [] CryptoAnts.layEgg(uint256) (src/CryptoAnts.sol#57-75) uses a weak PRNG: "numberOfEggsToMint = randomness % 21 (src/CryptoAnts.sol#70)" 
+> [] CryptoAnts.layEgg(uint256) (src/CryptoAnts.sol#57-75) uses a weak PRNG: "(randomness % 100) < antDeathProbability (src/CryptoAnts.sol#64)" 
+> [] CryptoAnts.layEgg(uint256) (src/CryptoAnts.sol#56-74) uses timestamp for comparisons
+
+## Test Coverage
+| File                | % Lines         | % Statements    | % Branches      | % Funcs        |
+|---------------------|-----------------|-----------------|-----------------|----------------|
+|[CryptoAnts.sol](./src/CryptoAnts.sol)  | 100.00% (32/32) | 100.00% (40/40) | 100.00% (11/11) | 100.00% (9/9)  |
+| [Egg.sol](./src/Egg.sol)         | 85.71% (6/7)    | 85.71% (6/7)    | 100.00% (6/6)   | 100.00% (4/4)  |
+| [Governance.sol](./src/Governance.sol)  | 100.00% (10/10) | 100.00% (10/10) | 83.33% (5/6)    | 100.00% (6/6)  |
+
+> Though Branches are 100% covered by tests, the coverage report generator fails to correctly detect.
+- [Egg.sol](./src/Egg.sol#28)#decimals()
+- [Governance.sol](./src/Governance.sol#18)#noZeroAddress()
+
 ### Requirements:
 - [x] EGGs should be ERC20 tokens
 - [x] EGGs should be indivisible
