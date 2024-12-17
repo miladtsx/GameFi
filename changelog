@@ -1,0 +1,44 @@
+# Changelog
+
+## [Unreleased]
+
+### Features
+- **LayEgg**: Ant might die (commit `91ed8c8a`)
+- **LayEgg**: Randomly lay 0 to 20 eggs (commit `bc806ee9`)
+- **LayEgg**: 1 egg, once every 10 minutes (commit `1fbceda0`)
+- **Governer**: Change the cooldown from 10 minutes (commit `1fbceda0`)
+- **governance**: Manage Egg price (commit `e948e97e`)
+- **buyEggs**: Make the buyerAddress indexed (commit `679a0670`)
+
+### Fixes
+- **security**: Reentrancy; update state before the call to external entity (commit `72c859b6`)
+- **buyEggs**: Validate input and return extra ETH back (commit `4b235d14`)
+- **buyEggs**: Check if the balance is enough (commit `009851ea`)
+- **setup**: The nonce would be 2 (commit `0e248561`)
+- **gas**: Make immutable (commit `a1b9fdfb`)
+
+### Refactors
+- **modifier**: NoZeroAddress (commit `7ff06297`)
+- **authorization**: Use modifier for common access control (commit `a29f99fe`)
+- **lint**: Remove redundant code (commit `3504d5bf`)
+
+### Tests
+- **unit**: Invalid egg count and is ant alive (commit `50fac8d5`)
+- **eggToAnt**: 0 to 100 ants from 1 egg (commit `b4a4717a`)
+- **antDeath**: Random death (commit `752d316f`)
+- **sellAnt**: Price and burn (commit `cded7fc3`)
+- **style**: Separate unit and integration (commit `4e6073e6`)
+- **buyEggs**: Add e2e tests (commit `883efffc`)
+
+### Styles
+- **naming**: Unify variable namings (commit `e5a8cfcb`)
+
+### Chores
+- **readme**: Update (commit `87e29cad`)
+- **linter**: Unify parameter setting names (commit `0cc9f36a`)
+- **linter**: Rename and resolve problems (commit `157c2c2e`)
+- **unused**: notLocked (commit `c468d708`)
+- **script**: computeCreateAddress() is deprecated; use vm.computeCreateAddress() instead (commit `1e8542f5`)
+
+## [Initial Release]
+- Initial commit (commit `56077d5a`)
