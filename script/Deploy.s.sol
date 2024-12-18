@@ -8,9 +8,10 @@ import {Egg, IEgg} from 'src/Egg.sol';
 contract Deploy is Script {
   function run() external {
     address deployer = vm.rememberKey(vm.envUint('DEPLOYER_PRIVATE_KEY'));
+    address governer = address(vm.envAddress('GOVERNER_ADDRESS'));
     vm.startBroadcast(deployer);
     IEgg _eggs = IEgg(vm.computeCreateAddress(deployer, 1));
-    ICryptoAnts _cryptoAnts = new CryptoAnts(address(_eggs), deployer);
+    ICryptoAnts _cryptoAnts = new CryptoAnts(address(_eggs), governer);
     _eggs = new Egg(address(_cryptoAnts));
     vm.stopBroadcast();
   }
