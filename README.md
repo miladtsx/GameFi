@@ -1,66 +1,76 @@
 # DeFi Wonderland Challenge
-
-## The Task
-- [x] Review the existing code
-    - There are more than 20 audited issues in the code
-- [x] Finish requirements (details below)
-- [x] Reach full (~100%) test coverage
-- [] Deploy to Sepolia
-- [] Mint some Ants to `0x7D4BF49D39374BdDeB2aa70511c2b772a0Bcf91e` from the CryptoAnt constructor
-- [] Create a Pull Request
-
-[changelog](./changelog)
+## Introduction
+DeFi Wonderland is a decentralized game featuring resource management with ERC20 (Egg) and ERC721 (ANTs) tokens. Players can mint, trade, and govern game elements, ensuring an engaging DeFi experience.
 
 
-## Trade Off(s)
-Allowing owners to get their owned AntId(s) or [getMyAntsId()](./src/CryptoAnts.sol#102) increases gas costs due to its use of an array to track Ant IDs per wallet. Removing it can reduce costs.
+### Actors
+- Deployer
+- Governor
+- [Army](https://sepolia.etherscan.io/address/0x7d4bf49d39374bddeb2aa70511c2b772a0bcf91e)
+- Player
 
-## Known Security Issues
-#### Smart Contracts (Slither)
-1. [weak PRNG](./src/CryptoAnts.sol#100) used for egg laying and Ant death probabilities:
-`uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender, antId)))`
-    1) Amount of Egg to lay [0,20]
-    2) Chance of Ant death when laying Egg
+## Accomplishments
+- [x] Reviewed existing code (addressed ~20+ audited issues).
+- [x] Completed functional requirements
+- [x] Achieved full (~100%) test coverage
+- [x] Deployed to Sepolia and hired 200 fresh strong, capable of Egg laying Ant's to the Army
+    - To hire more, call `_adminMintAnt(uint256 countOfAntsToMint)`
+    - For minting a **very large amount** of Ant's (e.g., billions), [Lazy Minting](./lazyMinting.md) is proposed as a gas-efficient approach for large-scale minting.
+- [x] Created a Pull Request
 
-2. Egg laying [cooldown](./src/CryptoAnts.sol#97) uses `block.timestamp`, which can deviate by 15 minutes.
+[View the changelog](./changelog)
 
-## Consideration for Production use
-- Remove [_adminMintAnt()](./src/CryptoAnts.sol#43) as it allows minting Ants without using Eggs, which contradicts game rules.
+
+### Trade Off(s)
+1) [getMyAntsId()](./src/CryptoAnts.sol#139) increases gas costs due to its array-based implementation. This feature can be removed for efficiency.
+
+### Known Security Issues
+1. [weak PRNG](./src/CryptoAnts.sol#99) Used for egg-laying and ant death probabilities. Consider integrating Chainlink VRF for a secure and reliable random number generation mechanism.
+2. [Timestamp Cooldown](./src/CryptoAnts.sol#96) uses `block.timestamp`, which can deviate by 15 minutes. Replace with block numbers for greater reliability.
+
+### Consideration for Production use
+- Remove [_adminMintAnt()](./src/CryptoAnts.sol#42) as it allows minting Ants without using Eggs, which contradicts game rules.
 - Governer can set the Ant and Egg price to 0.
 
-#### Test Coverage
+### Test Coverage
 - CryptoAnts.sol: 100% branch coverage.
 - Egg.sol: 100% branch coverage, 
 - Governance.sol: 100% branch coverage.
 
-## Game Logic (Requirements):
-- [x] EGGs are ERC20 tokens and indivisible.
-- [x] ANTs are ERC721 tokens.
-- [x] Users buy EGGs with ETH at 0.01 ETH each.
-- [x] EGGs create ANTs; ANTs can be sold for less than the EGG price.
-- [x] Governance can change EGG prices.
+### Functional Requirements
+- [x] Egg is an ERC20 token and indivisibleEnable infinite minting of Ants without requiring EGGs for administrative purposes.
+- [x] Ant is an ERC721 tokens (NFT).
+- [x] Users buy Egg with ETH at 0.01 ETH each.
+- [x] An Ant is born by burning an Egg; Ant can be sold for less than the Egg price.
+- [x] Governance can change Egg price.
+- [x] E2E tests are finished
 
 #### Nice to Have
 - [x] ANTs lay eggs every 10 minutes, randomly 0-20 eggs.
 - [x] 1% chance of Ant death when laying eggs.
 
-#### Additional Features
-- [x] Governance can adjust Ant death probability, egg laying cooldown, and egg price.
+#### Additional Nice to Have Features
+- [x] Governance can adjust Ant death probability, egg laying cooldown, and Ant price.
 - [x] Batch minting of Ants.
 - [x] Retrieve owned Ant IDs.
+- [x] Hiring infinite amount of super Ants (born without needing Egg) for the army
 
 #### Deployment Addresses
-- ANT `ERC721`: [View on Etherscan](https://sepolia.etherscan.io/address/0x29b4e177df879de7235498822c69065654ddf00d#code)
-- EGG `ERC20`: [View on Etherscan](https://sepolia.etherscan.io/address/0x3036055a339580bfe30892ab09965f29532d4741#code)
+- Ant `ERC721`: [View on Etherscan](https://sepolia.etherscan.io/address/0xB5500E2C3B09Eb7cfb19437BF88f3b3fe739C3b6#code)
+- Egg `ERC20`: [View on Etherscan](https://sepolia.etherscan.io/address/0xA8792F44636D480a74c9B854c29a9b3dcAe9704a#code)
 
 ## Running the Repo
 
-### Prerequisites
+#### Prerequisites
 - Install [Foundry](https://github.com/foundry-rs/foundry).
 
-### Setup Instructions
-1. Clone the repo and run 
+#### Setup Instructions
+1. Clone and install dependencies 
     ```bash 
+    git clone --depth 1 https://github.com/wonderland-quests/malad-ants
+    ```
+
+    ```bash
     yarn install --frozen-lockfile
     ```
 3. Get an API key from [Alchemy](https://www.alchemy.com/).
