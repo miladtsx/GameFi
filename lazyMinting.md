@@ -2,7 +2,7 @@
 
 # Lazy Minting for Large-Scale NFT Distribution
 
-I [minted](https://sepolia.etherscan.io/tx/0x95a0171984b04b114bf5ec25ddd3610a6972cfb8192dfd5f8ea845b31aafbb18) some [Ants](https://sepolia.etherscan.io/tx/0x943c40e273c60dbcf20774e166746530fa29d9882ecb37459dbfa462454f733e) for your army, but this is not the most efficient way to build one.
+I [minted](https://sepolia.etherscan.io/tx/0x95a0171984b04b114bf5ec25ddd3610a6972cfb8192dfd5f8ea845b31aafbb18) some [Ants](https://sepolia.etherscan.io/tx/0x943c40e273c60dbcf20774e166746530fa29d9882ecb37459dbfa462454f733e) for the army, but this is not the most efficient way to build one.
 
 For minting a massive number of NFTs (e.g., billions) to a specific or random address, direct minting during deployment is impractical due to high gas costs and network constraints. Instead, lazy minting provides a scalable and cost-efficient solution.
 
