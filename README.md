@@ -18,7 +18,7 @@ DeFi Wonderland is a decentralized game featuring resource management with ERC20
     - For minting a **very large amount** of Ant's (e.g., billions), [Lazy Minting](./lazyMinting.md) is proposed as a gas-efficient approach for large-scale minting.
 - [x] Created a Pull Request
 
-[View the changelog](./changelog)
+[View the changelog](./changelog.md)
 
 
 ### Trade Off(s)
