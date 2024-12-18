@@ -3,14 +3,13 @@ pragma solidity 0.8.23;
 
 import {IEgg} from './IEgg.sol';
 import {ERC20} from '@openzeppelin/token/ERC20/ERC20.sol';
-import 'forge-std/console.sol';
 
 /**
  * @title Egg Contract
  * @dev ERC20 token representing eggs in the CryptoAnts game.
  */
 contract Egg is ERC20, IEgg {
-  address private immutable _antContractAddress;
+  address public immutable _antContractAddress;
 
   /**
    * @dev Initializes the contract with the address of the CryptoAnts contract.

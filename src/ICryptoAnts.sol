@@ -18,7 +18,7 @@ interface ICryptoAnts is IERC721 {
   error AntUnAuthorizedAccess();
 
   function buyEggs(uint256 amount) external payable;
-  function createAnt() external payable;
+  function createAnt() external;
   function createAntInBatch(uint8 countOfAntsToMint) external payable;
   function layEgg(uint256 antId) external;
   function sellAnt(uint256 antId) external;

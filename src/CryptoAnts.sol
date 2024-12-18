@@ -6,7 +6,6 @@ import {ICryptoAnts} from './ICryptoAnts.sol';
 import {IEgg} from './IEgg.sol';
 import {ERC721} from '@openzeppelin/token/ERC721/ERC721.sol';
 import {ReentrancyGuard} from '@openzeppelin/utils/ReentrancyGuard.sol';
-import 'forge-std/console.sol';
 
 /**
  * @title CryptoAnts Contract
@@ -71,7 +70,7 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
   /**
    * @notice Creates a new ant for the caller.
    */
-  function createAnt() external payable {
+  function createAnt() external {
     if (EGGS.balanceOf(msg.sender) < 1) revert NoEggs();
     EGGS.burn(msg.sender, 1);
     emit AntCreated(_mintAnt(msg.sender));
