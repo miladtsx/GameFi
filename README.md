@@ -1,6 +1,6 @@
 # DeFi Wonderland Challenge
 ## Introduction
-DeFi Wonderland is a decentralized game featuring resource management with ERC20 (Egg) and ERC721 (ANTs) tokens. Players can mint, trade, and govern game elements, ensuring an engaging DeFi experience.
+DeFi Wonderland is a decentralized game featuring resource management with ERC20 (Egg) and ERC721 (ANTs) tokens. Players can mint, trade, and Governor can govern game elements, ensuring an engaging DeFi experience.
 
 
 ### Actors
