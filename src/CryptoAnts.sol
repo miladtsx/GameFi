@@ -60,7 +60,8 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
     uint256 extraETH = msg.value - totalCost;
 
     if (extraETH > 0) {
-      payable(msg.sender).transfer(extraETH);
+      (bool success,) = payable(msg.sender).call{value: extraETH}('');
+      require(success);
     }
 
     EGGS.mint(msg.sender, amount);
@@ -119,7 +120,8 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
   function sellAnt(uint256 antId) external onlyAntOwner(antId) nonReentrant {
     _killAnt(antId);
     // solhint-disable-next-line
-    payable(msg.sender).transfer(antPrice);
+    (bool success,) = payable(msg.sender).call{value: antPrice}('');
+    require(success);
     emit AntSold(msg.sender, antId);
   }
 
