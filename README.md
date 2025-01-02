@@ -54,6 +54,7 @@ DeFi Wonderland is a decentralized game featuring resource management with ERC20
 - [x] Batch minting of Ants.
 - [x] Retrieve owned Ant IDs.
 - [x] Hiring infinite amount of super Ants (born without needing Egg) for the army
+- [x] Prevent accidental direct ETH Transfer
 
 #### Deployment Addresses
 - Ant `ERC721`: [View on Etherscan](https://sepolia.etherscan.io/address/0xB5500E2C3B09Eb7cfb19437BF88f3b3fe739C3b6#code)

@@ -42,6 +42,19 @@ contract IntegrationTest is Test, TestUtils {
     _eggs = new Egg(address(_cryptoAnts));
   }
 
+  function testPreventAccidentalETHSent() public {
+    uint256 amountOfETH = 1 ether;
+    deal(_randomAddress, amountOfETH);
+
+    vm.startPrank(_randomAddress);
+    vm.expectRevert('Direct ETH transfers not allowed');
+    (bool success,) = address(_cryptoAnts).call{value: amountOfETH}('');
+    assertFalse(success);
+    vm.stopPrank();
+
+    assertEq(address(_cryptoAnts).balance, 0);
+  }
+
   function testMintAntForAdmin() public {
     _cryptoAnts._adminMintAnt(800);
   }

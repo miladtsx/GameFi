@@ -164,6 +164,20 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
   }
 
   /**
+   * @dev Prevents accidental ETH transfers to the contract
+   */
+  receive() external payable {
+    revert NoDirectETHTransfer();
+  }
+
+  /**
+   * @dev Prevents accidental ETH transfers to the contract
+   */
+  fallback() external payable {
+    revert NoDirectETHTransfer();
+  }
+
+  /**
    * @dev Kills an ant and removes it from the owner's list.
    * @param antId The ID of the ant to kill.
    */
