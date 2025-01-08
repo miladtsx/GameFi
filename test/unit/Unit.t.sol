@@ -431,10 +431,6 @@ contract UnitTest is Test, TestUtils {
     vm.stopPrank();
   }
 
-  function testAdminBackdoor() public {
-    _cryptoAnts._adminMintAnt(10);
-  }
-
   function testEggIsNotDivisable() public view {
     assertEq(_eggs.decimals(), 0);
   }

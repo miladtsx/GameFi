@@ -55,10 +55,6 @@ contract IntegrationTest is Test, TestUtils {
     assertEq(address(_cryptoAnts).balance, 0);
   }
 
-  function testMintAntForAdmin() public {
-    _cryptoAnts._adminMintAnt(800);
-  }
-
   function testBuyEGGWithETH() public {
     uint8 amountOfExpectedEggsToBuy = 100;
     uint256 amountOfETH = 1 ether;

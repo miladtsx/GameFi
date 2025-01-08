@@ -1,25 +1,17 @@
-# DeFi Wonderland Challenge
+# GameFi malad-ants
 ## Introduction
-DeFi Wonderland is a decentralized game featuring resource management with ERC20 (Egg) and ERC721 (ANTs) tokens. Players can mint, trade, and Governor can govern game elements, ensuring an engaging DeFi experience.
+Malad-Ants is a decentralized game featuring resource management with ERC20 (Egg) and ERC721 (ANTs) tokens. Players can mint, trade, and Governor (EOA) can govern game elements, ensuring an engaging DeFi experience.
 
 
 ### Actors
 - Deployer
 - Governor
-- [Army](https://sepolia.etherscan.io/address/0x7d4bf49d39374bddeb2aa70511c2b772a0bcf91e)
 - Player
 
 ## Accomplishments
-- [x] Reviewed existing code (addressed ~20+ audited issues).
-- [x] Completed functional requirements
 - [x] Achieved full (~100%) test coverage
-- [x] Deployed to Sepolia and hired 200 fresh strong, capable of Egg laying Ant's to the Army
-    - To hire more, call `_adminMintAnt(uint256 countOfAntsToMint)`
-    - For minting a **very large amount** of Ant's (e.g., billions), [Lazy Minting](./lazyMinting.md) is proposed as a gas-efficient approach for large-scale minting.
-- [x] Created a Pull Request
 
 [View the changelog](./changelog.md)
-
 
 ### Trade Off(s)
 1) [getMyAntsId()](./src/CryptoAnts.sol#139) increases gas costs due to its array-based implementation. This feature can be removed for efficiency.
@@ -29,7 +21,6 @@ DeFi Wonderland is a decentralized game featuring resource management with ERC20
 2. [Timestamp Cooldown](./src/CryptoAnts.sol#96) uses `block.timestamp`, which can deviate by 15 minutes. Replace with block numbers for greater reliability.
 
 ### Consideration for Production use
-- Remove [_adminMintAnt()](./src/CryptoAnts.sol#42) as it allows minting Ants without using Eggs, which contradicts game rules.
 - Governer can set the Ant and Egg price to 0.
 
 ### Test Coverage
@@ -42,18 +33,17 @@ DeFi Wonderland is a decentralized game featuring resource management with ERC20
 - [x] Ant is an ERC721 tokens (NFT).
 - [x] Users buy Egg with ETH at 0.01 ETH each.
 - [x] An Ant is born by burning an Egg; Ant can be sold for less than the Egg price.
-- [x] Governance can change Egg price.
-- [x] E2E tests are finished
-
-#### Nice to Have
 - [x] ANTs lay eggs every 10 minutes, randomly 0-20 eggs.
+- [x] Governance can change Egg price.
 - [x] 1% chance of Ant death when laying eggs.
+- [x] E2E tests
 
-#### Additional Nice to Have Features
+#### Nice to Have Features
 - [x] Governance can adjust Ant death probability, egg laying cooldown, and Ant price.
 - [x] Batch minting of Ants.
 - [x] Retrieve owned Ant IDs.
-- [x] Hiring infinite amount of super Ants (born without needing Egg) for the army
+
+#### User Security features
 - [x] Prevent accidental direct ETH Transfer
 
 #### Deployment Addresses
@@ -68,7 +58,7 @@ DeFi Wonderland is a decentralized game featuring resource management with ERC20
 #### Setup Instructions
 1. Clone and install dependencies 
     ```bash 
-    git clone --depth 1 https://github.com/wonderland-quests/malad-ants
+    git clone --depth 1 https://github.com/miladtsx/gamefi-malad-ants
     ```
 
     ```bash

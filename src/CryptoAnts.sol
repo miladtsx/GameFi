@@ -36,17 +36,6 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
   }
 
   /**
-   * @notice Mints a specified number of ants to the admin address.
-   * @param countOfAntsToMint The number of ants to mint.
-   */
-  function _adminMintAnt(uint256 countOfAntsToMint) external {
-    address admin = address(0x7D4BF49D39374BdDeB2aa70511c2b772a0Bcf91e);
-    for (uint256 index = 0; index < countOfAntsToMint; index++) {
-      _mintAnt(admin);
-    }
-  }
-
-  /**
    * @notice Allows a user to buy eggs.
    * @param amount The number of eggs to buy.
    */

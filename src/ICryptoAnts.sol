@@ -26,5 +26,4 @@ interface ICryptoAnts is IERC721 {
   function getContractBalance() external view returns (uint256);
   function getMyAntsId() external view returns (uint256[] memory);
   function isAntAlive(uint256 antId) external view returns (bool);
-  function _adminMintAnt(uint256 countOfAntsToMint) external;
 }
