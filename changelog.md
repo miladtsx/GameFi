@@ -15,14 +15,15 @@
 - **ReturnAntIds**: Retrieve owned Ant IDs (commit [0dd6980f](https://github.com/miladtsx/gamefi-malad-ants/commit/0dd6980f9aafb047d3f83fba5d37b0a81ea9d02e))
 
 ### Fixes
-- **ReturnAntIds**: update the ant id array when deleting (commit [2d5abcfa](https://github.com/miladtsx/gamefi-malad-ants/commit/2d5abcfa9f9ccd6e5727b440a48c8a2dca3cc6ef))
-- **security**: Use OpenZeppelin reentrancy guard (commit [9dbfa3cd](https://github.com/miladtsx/gamefi-malad-ants/commit/9dbfa3cdad6812d7da818dc19bdb98eb9beedd1a))
-- **security**: Update packages (commit [cddbb597](https://github.com/miladtsx/gamefi-malad-ants/commit/cddbb597919db06836cdc0e1ba7e84f76b4a7f18))
-- **security**: Use Stable Solidity Version (commit [8aff505e](https://github.com/miladtsx/gamefi-malad-ants/commit/8aff505e60b298e0432a53ba655d8b4964fe6029))
-- **buyEggs**: Validate input, return extra ETH (commit [4b235d14](https://github.com/miladtsx/gamefi-malad-ants/commit/4b235d1481fad2178dbea18e13f4cb866f9cca09))
-- **buyEggs**: check balance (commit [009851ea](https://github.com/miladtsx/gamefi-malad-ants/commit/009851eafdf5d0847a2ffecf42e865cd7d0541c8))
-- **setup**: Adjust nonce (commit [0e248561](https://github.com/miladtsx/gamefi-malad-ants/commit/0e24856167066a292b25ca48a1e6f9f2b37d39a3))
-- **gas**: Use immutable variables (commit [a1b9fdfb](https://github.com/miladtsx/gamefi-malad-ants/commit/a1b9fdfb8fac4da746d1d4af3c1d2c8fc02676ed))
+- **scalability**: deleting a token if the owner has many Ant's might run out of gas. use ERC721Enumerable to fix it (commit [da8aa25f](https://github.com/wonderland-quests/malad-ants/commit/da8aa25f90d6d5f09515a8543455626c7949ad24))
+- **ReturnAntIds**: update the ant id array when deleting (commit [2d5abcfa](https://github.com/wonderland-quests/malad-ants/commit/2d5abcfa9f9ccd6e5727b440a48c8a2dca3cc6ef))
+- **security**: Use OpenZeppelin reentrancy guard (commit [9dbfa3cd](https://github.com/wonderland-quests/malad-ants/commit/9dbfa3cdad6812d7da818dc19bdb98eb9beedd1a))
+- **security**: Update packages (commit [cddbb597](https://github.com/wonderland-quests/malad-ants/commit/cddbb597919db06836cdc0e1ba7e84f76b4a7f18))
+- **security**: Use Stable Solidity Version (commit [8aff505e](https://github.com/wonderland-quests/malad-ants/commit/8aff505e60b298e0432a53ba655d8b4964fe6029))
+- **buyEggs**: Validate input, return extra ETH (commit [4b235d14](https://github.com/wonderland-quests/malad-ants/commit/4b235d1481fad2178dbea18e13f4cb866f9cca09))
+- **buyEggs**: check balance (commit [009851ea](https://github.com/wonderland-quests/malad-ants/commit/009851eafdf5d0847a2ffecf42e865cd7d0541c8))
+- **setup**: Adjust nonce (commit [0e248561](https://github.com/wonderland-quests/malad-ants/commit/0e24856167066a292b25ca48a1e6f9f2b37d39a3))
+- **gas**: Use immutable variables (commit [a1b9fdfb](https://github.com/wonderland-quests/malad-ants/commit/a1b9fdfb8fac4da746d1d4af3c1d2c8fc02676ed))
 
 ### Refactors
 - **modifier**: Implement NoZeroAddress (commit [7ff06297](https://github.com/miladtsx/gamefi-malad-ants/commit/7ff0629719f5d9f083c7bb5bfcc1b759c228bf8f))

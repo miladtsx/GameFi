@@ -5,21 +5,21 @@ import {Governance} from './Governance.sol';
 import {ICryptoAnts} from './ICryptoAnts.sol';
 import {IEgg} from './IEgg.sol';
 import {ERC721} from '@openzeppelin/token/ERC721/ERC721.sol';
+import {ERC721Enumerable} from '@openzeppelin/token/ERC721/extensions/ERC721Enumerable.sol';
 import {ReentrancyGuard} from '@openzeppelin/utils/ReentrancyGuard.sol';
+import {IERC165} from '@openzeppelin/utils/introspection/IERC165.sol';
 
 /**
  * @title CryptoAnts Contract
  * @dev Manages the creation, sale, and lifecycle of CryptoAnts.
  */
-contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
-  mapping(uint256 => address) public antToOwner;
-  mapping(address => uint256[]) internal ownerToAntIds;
+contract CryptoAnts is ERC721, ERC721Enumerable, Governance, ICryptoAnts, ReentrancyGuard {
   IEgg public immutable EGGS;
   uint256 public antsCreated = 0;
   mapping(uint256 => uint256) public lastEggLayingTime;
 
   modifier onlyAntOwner(uint256 antId) {
-    if (antToOwner[antId] != msg.sender) revert AntUnAuthorizedAccess();
+    if (ownerOf(antId) != msg.sender) revert AntUnAuthorizedAccess();
     _;
   }
 
@@ -122,13 +122,20 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
     return address(this).balance;
   }
 
-  /**
-   * @notice Returns the array of ANT IDs owned by the caller.
-   * @return An array of ANT IDs.
-   * @notice because of the deletion method, the order of ants Id might change.
-   */
-  function getMyAntsId() external view returns (uint256[] memory) {
-    return ownerToAntIds[msg.sender];
+  function _update(
+    address to,
+    uint256 tokenId,
+    address auth
+  ) internal override(ERC721, ERC721Enumerable) returns (address) {
+    return super._update(to, tokenId, auth);
+  }
+
+  function _increaseBalance(address account, uint128 value) internal override(ERC721, ERC721Enumerable) {
+    super._increaseBalance(account, value);
+  }
+
+  function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721Enumerable, IERC165) returns (bool) {
+    return super.supportsInterface(interfaceId);
   }
 
   /**
@@ -138,18 +145,7 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
    */
   function _mintAnt(address receiver) private returns (uint256 antId) {
     antId = ++antsCreated;
-    antToOwner[antId] = receiver;
-    ownerToAntIds[receiver].push(antId);
     _mint(receiver, antId);
-  }
-
-  /**
-   * @notice Checks if the Ant is alive.
-   * @param antId The ID of the Ant to check.
-   * @return A boolean indicating if the Ant is alive.
-   */
-  function isAntAlive(uint256 antId) external view returns (bool) {
-    return antToOwner[antId] != address(0);
   }
 
   /**
@@ -167,31 +163,10 @@ contract CryptoAnts is ERC721, Governance, ICryptoAnts, ReentrancyGuard {
   }
 
   /**
-   * @dev Kills an ant and removes it from the owner's list.
+   * @dev Kills an ant
    * @param antId The ID of the ant to kill.
    */
   function _killAnt(uint256 antId) private {
-    address owner = antToOwner[antId];
-
-    // Find the index of the antId in the owner's array
-    uint256[] storage antIds = ownerToAntIds[owner];
-    uint256 indexToRemove;
-    bool found = false;
-
-    for (uint256 i = 0; i < antIds.length; i++) {
-      if (antIds[i] == antId) {
-        indexToRemove = i;
-        found = true;
-        break;
-      }
-    }
-
-    // Move the last element to the index to remove
-    antIds[indexToRemove] = antIds[antIds.length - 1];
-    // Remove the last element
-    antIds.pop();
-
-    delete antToOwner[antId];
     _burn(antId);
   }
 }

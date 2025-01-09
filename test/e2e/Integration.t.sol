@@ -104,8 +104,8 @@ contract IntegrationTest is Test, TestUtils {
 
     _cryptoAnts.createAntInBatch(uint8(_countOfEgg));
 
-    uint256[] memory _countOfAntsIOwn = _cryptoAnts.getMyAntsId();
-    assertEq(_countOfEgg, _countOfAntsIOwn.length);
+    uint256 _countOfAntsIOwn = _cryptoAnts.balanceOf(_randomAddress);
+    assertEq(_countOfEgg, _countOfAntsIOwn);
     assertEq(_eggs.balanceOf(_randomAddress), 0);
   }
 
@@ -226,14 +226,16 @@ contract IntegrationTest is Test, TestUtils {
       _cryptoAnts.layEgg(antId);
 
       //Checking if the ant has died
-      if (_cryptoAntsContract.antToOwner(antId) == address(0)) {
-        assertEq(_cryptoAntsContract.antToOwner(antId), address(0), 'Ant should have died');
+
+      try _cryptoAntsContract.ownerOf(antId) {
+        continue;
+      } catch (bytes memory) {
         didAntDied = true;
         break;
       }
     }
 
-    assertEq(didAntDied, true, 'Ant never died');
+    assertLt(_cryptoAnts.balanceOf(_randomAddress), 100, 'Ant should have died at least 1% of the times');
 
     vm.stopPrank();
   }
@@ -290,12 +292,15 @@ contract IntegrationTest is Test, TestUtils {
     return stats;
   }
 
+  /**
+   * No egg were layed, did the ant died or just layed 0 egg?
+   */
   function _handleAntPossibleDeath(AntStats memory stats, uint8 antId) internal view returns (AntStats memory) {
-    if (!_cryptoAntsContract.isAntAlive(antId)) {
+    try _cryptoAntsContract.ownerOf(antId) {
+      stats.noEggLays++;
+    } catch (bytes memory) /*lowLevelData*/ {
       stats.antsDied++;
       stats.aliveAnts--;
-    } else {
-      stats.noEggLays++;
     }
     return stats;
   }

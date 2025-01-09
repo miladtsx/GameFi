@@ -24,6 +24,4 @@ interface ICryptoAnts is IERC721 {
   function layEgg(uint256 antId) external;
   function sellAnt(uint256 antId) external;
   function getContractBalance() external view returns (uint256);
-  function getMyAntsId() external view returns (uint256[] memory);
-  function isAntAlive(uint256 antId) external view returns (bool);
 }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.23;
 
+import {IERC721Errors} from '@openzeppelin/interfaces/draft-IERC6093.sol';
 import {IERC721} from '@openzeppelin/token/ERC721/IERC721.sol';
 import {Test} from 'forge-std/Test.sol';
 import {console} from 'forge-std/console.sol';
@@ -141,8 +142,8 @@ contract UnitTest is Test, TestUtils {
     _cryptoAnts.buyEggs{value: 1 ether}(1);
     _cryptoAnts.createAnt();
 
-    uint256[] memory myAnts = _cryptoAnts.getMyAntsId();
-    assertEq(myAnts.length, 1);
+    uint256 myAnts = _cryptoAnts.balanceOf(_randomAddress);
+    assertEq(myAnts, 1);
     vm.stopPrank();
   }
 
@@ -153,17 +154,15 @@ contract UnitTest is Test, TestUtils {
     _cryptoAnts.createAnt();
     _cryptoAnts.createAnt();
 
-    uint256[] memory myAnts = _cryptoAnts.getMyAntsId();
-    assertEq(myAnts.length, 2);
+    uint256 myAnts = _cryptoAnts.balanceOf(_randomAddress);
+    assertEq(myAnts, 2);
 
-    uint256 firstAntId = myAnts[0];
-    uint256 secondAntId = myAnts[1];
+    uint256 firstAntId = 1;
 
     _cryptoAnts.sellAnt(firstAntId);
 
-    uint256[] memory myAntsAfterDelete = _cryptoAnts.getMyAntsId();
-    assertEq(myAntsAfterDelete.length, 1);
-    assertEq(myAntsAfterDelete[0], secondAntId);
+    uint256 myAntsAfterDelete = _cryptoAnts.balanceOf(_randomAddress);
+    assertEq(myAntsAfterDelete, 1);
 
     vm.stopPrank();
   }
@@ -285,7 +284,7 @@ contract UnitTest is Test, TestUtils {
     emit IERC721.Transfer(_randomAddress, address(0), antId);
     _cryptoAnts.sellAnt(antId);
 
-    vm.expectRevert(ICryptoAnts.AntUnAuthorizedAccess.selector);
+    vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, antId));
     _cryptoAnts.sellAnt(antId);
 
     vm.stopPrank();
@@ -388,14 +387,14 @@ contract UnitTest is Test, TestUtils {
     assertEq(_eggs.balanceOf(_randomAddress), 0);
 
     // The Ant is dead! there is no Ant you own, so:
-    vm.expectRevert(ICryptoAnts.AntUnAuthorizedAccess.selector);
+    vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, firstAntId));
     _cryptoAnts.layEgg(firstAntId);
     vm.stopPrank();
   }
 
   function testLayEggAccessControl() public {
     uint256 firstAntId = _cryptoAntsContract.antsCreated();
-    vm.expectRevert(ICryptoAnts.AntUnAuthorizedAccess.selector);
+    vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, firstAntId));
     _cryptoAnts.layEgg(firstAntId);
   }
 
@@ -413,22 +412,6 @@ contract UnitTest is Test, TestUtils {
     vm.expectEmit(false, false, false, true);
     emit IGovernance.EggPriceChanged(1 ether);
     _governance.setEggPrice(1 ether);
-  }
-
-  function testIsAntAlive() public {
-    vm.startPrank(_randomAddress);
-
-    uint256 nonExistentAntId = _cryptoAntsContract.antsCreated() + 1;
-
-    assertEq(_cryptoAnts.isAntAlive(nonExistentAntId), false);
-    deal(_randomAddress, 1 ether);
-
-    _cryptoAnts.buyEggs{value: 1 ether}(1);
-    _cryptoAnts.createAnt();
-    uint256 justCreatedAntId = nonExistentAntId;
-    assertEq(_cryptoAnts.isAntAlive(justCreatedAntId), true);
-
-    vm.stopPrank();
   }
 
   function testEggIsNotDivisable() public view {

@@ -13,9 +13,6 @@ Malad-Ants is a decentralized game featuring resource management with ERC20 (Egg
 
 [View the changelog](./changelog.md)
 
-### Trade Off(s)
-1) [getMyAntsId()](./src/CryptoAnts.sol#139) increases gas costs due to its array-based implementation. This feature can be removed for efficiency.
-
 ### Known Security Issues
 1. [weak PRNG](./src/CryptoAnts.sol#99) Used for egg-laying and ant death probabilities. Consider integrating Chainlink VRF for a secure and reliable random number generation mechanism.
 2. [Timestamp Cooldown](./src/CryptoAnts.sol#96) uses `block.timestamp`, which can deviate by 15 minutes. Replace with block numbers for greater reliability.
@@ -24,7 +21,10 @@ Malad-Ants is a decentralized game featuring resource management with ERC20 (Egg
 - Governer can set the Ant and Egg price to 0.
 
 ### Test Coverage
-- CryptoAnts.sol: 100% branch coverage.
+- CryptoAnts.sol: 92% branch coverage
+    - the rest 8% are:
+        - ERC721Enumerable
+        - fallback() and receive()
 - Egg.sol: 100% branch coverage, 
 - Governance.sol: 100% branch coverage.
 
